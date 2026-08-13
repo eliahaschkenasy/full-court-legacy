@@ -9,6 +9,7 @@ type Team = {
   name: string;
   short: string;
   league: string;
+  logo: string;
   color: string;
   accent: string;
   prestige: number;
@@ -65,16 +66,16 @@ type Choice = {
 };
 
 const TEAMS: Team[] = [
-  { name: "Real Madrid", short: "RMA", league: "Liga ACB", color: "#f7f7f2", accent: "#7256ff", prestige: 91 },
-  { name: "FC Barcelona", short: "FCB", league: "Liga ACB", color: "#9b1634", accent: "#1659c9", prestige: 90 },
-  { name: "Maccabi Tel Aviv", short: "MTA", league: "Israeli Premier League", color: "#f5c928", accent: "#194f9e", prestige: 78 },
-  { name: "Paris Basketball", short: "PAR", league: "LNB Pro A", color: "#ff5d2e", accent: "#161b33", prestige: 75 },
-  { name: "Chicago Bulls", short: "CHI", league: "NBA", color: "#ce1141", accent: "#f4f4ef", prestige: 92 },
-  { name: "Los Angeles Lakers", short: "LAL", league: "NBA", color: "#fdb927", accent: "#552583", prestige: 96 },
-  { name: "Boston Celtics", short: "BOS", league: "NBA", color: "#007a33", accent: "#ba9653", prestige: 96 },
-  { name: "New York Knicks", short: "NYK", league: "NBA", color: "#f58426", accent: "#006bb6", prestige: 89 },
-  { name: "Miami Heat", short: "MIA", league: "NBA", color: "#98002e", accent: "#f9a01b", prestige: 90 },
-  { name: "Golden State Warriors", short: "GSW", league: "NBA", color: "#1d428a", accent: "#ffc72c", prestige: 95 },
+  { name: "Real Madrid", short: "RMA", league: "Liga ACB", logo: "teams/real-madrid.png", color: "#f7f7f2", accent: "#7256ff", prestige: 91 },
+  { name: "FC Barcelona", short: "FCB", league: "Liga ACB", logo: "teams/barcelona.png", color: "#9b1634", accent: "#1659c9", prestige: 90 },
+  { name: "Maccabi Tel Aviv", short: "MTA", league: "Israeli Premier League", logo: "teams/maccabi-tel-aviv.png", color: "#f5c928", accent: "#194f9e", prestige: 78 },
+  { name: "Paris Basketball", short: "PAR", league: "LNB Pro A", logo: "teams/paris.png", color: "#ff5d2e", accent: "#161b33", prestige: 75 },
+  { name: "Chicago Bulls", short: "CHI", league: "NBA", logo: "teams/chicago-bulls.png", color: "#ce1141", accent: "#f4f4ef", prestige: 92 },
+  { name: "Los Angeles Lakers", short: "LAL", league: "NBA", logo: "teams/la-lakers.png", color: "#fdb927", accent: "#552583", prestige: 96 },
+  { name: "Boston Celtics", short: "BOS", league: "NBA", logo: "teams/boston-celtics.png", color: "#007a33", accent: "#ba9653", prestige: 96 },
+  { name: "New York Knicks", short: "NYK", league: "NBA", logo: "teams/new-york-knicks.png", color: "#f58426", accent: "#006bb6", prestige: 89 },
+  { name: "Miami Heat", short: "MIA", league: "NBA", logo: "teams/miami-heat.png", color: "#98002e", accent: "#f9a01b", prestige: 90 },
+  { name: "Golden State Warriors", short: "GSW", league: "NBA", logo: "teams/golden-state-warriors.png", color: "#1d428a", accent: "#ffc72c", prestige: 95 },
 ];
 
 const DEFAULT: GameState = {
@@ -146,7 +147,8 @@ function teamMark(team: Team, small = false) {
       style={{ "--team": team.color, "--team-accent": team.accent } as React.CSSProperties}
       aria-hidden="true"
     >
-      {team.short}
+      <img src={team.logo} alt="" />
+      <b>{team.short}</b>
     </span>
   );
 }
@@ -159,7 +161,10 @@ export default function Home() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("full-court-legacy-save");
-      if (saved) setGame(JSON.parse(saved));
+      if (saved) {
+        const parsed = JSON.parse(saved) as GameState;
+        setGame({ ...parsed, team: TEAMS.find((team) => team.name === parsed.team?.name) ?? DEFAULT.team });
+      }
     } catch {}
     setLoaded(true);
   }, []);

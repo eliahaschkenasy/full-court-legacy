@@ -22,3 +22,5 @@ The `main` branch deploys automatically through GitHub Actions.
 ## Disclaimer
 
 Full Court Legacy is an unofficial fan-made simulation. Team and league names and marks belong to their respective owners. This project is not affiliated with or endorsed by any team, league, or governing body.
+
+Team marks are used for identification and are sourced from official club sites, ESPN's public team-logo CDN, and Wikipedia/Wikimedia.
