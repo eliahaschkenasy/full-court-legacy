@@ -26,7 +26,12 @@ body {
   margin: 0;
   background: var(--black);
   color: var(--ink);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
   overflow-x: hidden;
 }
 button,
@@ -1763,7 +1768,12 @@ h3,
 
 .team-mark {
   flex: 0 0 auto;
-  background: radial-gradient(circle at 35% 28%, #ffffff 0, #f3f5fa 66%, #cbd2df 100%);
+  background: radial-gradient(
+    circle at 35% 28%,
+    #ffffff 0,
+    #f3f5fa 66%,
+    #cbd2df 100%
+  );
   border-color: #ffffff1a;
 }
 
@@ -2110,5 +2120,189 @@ h3,
 
   .ovr-block strong {
     font-size: 46px;
+  }
+}
+
+/* UX refinement: isolated crests, private prospect ratings and faster setup. */
+.identity-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: 12px;
+}
+
+.identity-fields label {
+  min-width: 0;
+}
+
+.identity-fields label > small {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.jersey-input {
+  height: 60px;
+  padding: 12px !important;
+  text-align: center;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.sealed-rating-note {
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 9px 11px;
+  border: 1px solid #8067ff52;
+  background: #8067ff0d;
+}
+
+.sealed-rating-note strong {
+  color: #ad9cff;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.sealed-rating-note span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.team-mark {
+  position: relative;
+  display: block;
+  width: 90px;
+  height: 90px;
+  aspect-ratio: auto;
+  contain: layout paint;
+  isolation: isolate;
+  overflow: hidden;
+  line-height: 0;
+  font-size: 0;
+}
+
+.team-mark img {
+  position: absolute;
+  inset: 9%;
+  display: block;
+  width: 82%;
+  height: 82%;
+  max-width: 82%;
+  max-height: 82%;
+  margin: 0;
+  object-fit: contain;
+  object-position: 50% 50%;
+}
+
+.team-mark-small {
+  width: 48px;
+  height: 48px;
+}
+
+.hero-identity {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+}
+
+.team-contract {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+}
+
+.share-action {
+  min-width: 210px;
+  padding: 12px 16px;
+  border: 1px solid var(--cyan);
+  background: #35dcff12;
+  color: var(--cyan);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.share-action span {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.share-action:hover {
+  background: var(--cyan);
+  color: #061117;
+}
+
+.share-status {
+  min-height: 14px;
+  margin: 13px 0 0;
+  color: var(--lime) !important;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+}
+
+@media (max-width: 680px) {
+  .identity-fields {
+    grid-template-columns: minmax(0, 1fr) 105px;
+  }
+
+  .sealed-rating-note {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .setup-submit {
+    box-shadow: 0 14px 40px #0008;
+  }
+
+  .hero-identity {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .player-hero .team-mark {
+    width: 50px;
+    height: 50px;
+  }
+
+  .team-contract {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+
+  .team-contract .team-mark {
+    width: 46px;
+    height: 46px;
+  }
+
+  .retirement-actions {
+    width: min(360px, 100%);
+  }
+
+  .retirement-actions > * {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 390px) {
+  .identity-fields {
+    grid-template-columns: minmax(0, 1fr) 92px;
+    gap: 8px;
+  }
+
+  .hero-identity {
+    grid-template-columns: 45px minmax(0, 1fr);
+  }
+
+  .player-hero .team-mark {
+    width: 45px;
+    height: 45px;
   }
 }

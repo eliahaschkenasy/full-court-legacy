@@ -20,7 +20,12 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /START IN EUROPE/);
   assert.match(page, /START IN COLLEGE/);
   assert.match(page, /DECLARE FOR THE DRAFT/);
-  assert.match(page, /START CAREER/);
+  assert.match(page, /START MY CAREER/);
+  assert.match(page, /jerseyNumber/);
+  assert.match(page, /full-court-legacy-profile/);
+  assert.match(page, /shareCareer/);
+  assert.match(page, /SHARE CAREER/);
+  assert.match(page, /<strong>\?<\/strong>\s*<small>OVR/);
   assert.match(page, /Featured starter/);
   assert.match(page, /MORE PLAYTIME/);
   assert.match(page, /SeasonResultModal/);

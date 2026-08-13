@@ -53,6 +53,7 @@ type Season = {
 type GameState = {
   stage: Stage;
   name: string;
+  jerseyNumber: string;
   position: Position;
   archetype: string;
   origin: Origin;
@@ -279,6 +280,7 @@ const TEAMS: Team[] = [
 const DEFAULT: GameState = {
   stage: "intro",
   name: "",
+  jerseyNumber: "1",
   position: "PG",
   archetype: "Floor General",
   origin: null,
@@ -611,7 +613,6 @@ function teamMark(team: Team, small = false) {
       aria-hidden="true"
     >
       <img src={team.logo} alt="" />
-      <b>{team.short}</b>
     </span>
   );
 }
@@ -626,11 +627,15 @@ export default function Home() {
   const [seasonFeedback, setSeasonFeedback] = useState<SeasonFeedback | null>(
     null,
   );
+  const [shareStatus, setShareStatus] = useState("");
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("full-court-legacy-save");
       const trophies = localStorage.getItem("full-court-legacy-achievements");
+      const profile = JSON.parse(
+        localStorage.getItem("full-court-legacy-profile") ?? "{}",
+      ) as { name?: string; jerseyNumber?: string };
       // This client-only hydration restores the device's saved trophy room.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (trophies) setAchievementIds(JSON.parse(trophies));
@@ -657,6 +662,8 @@ export default function Home() {
         setGame({
           ...DEFAULT,
           ...parsed,
+          name: parsed.name ?? profile.name ?? "",
+          jerseyNumber: parsed.jerseyNumber ?? profile.jerseyNumber ?? "1",
           origin: parsed.origin ?? (team.path === "college" ? "usa" : "europe"),
           phase: team.path,
           startingOvr,
@@ -676,6 +683,15 @@ export default function Home() {
   useEffect(() => {
     if (!loaded) return;
     localStorage.setItem("full-court-legacy-save", JSON.stringify(game));
+    if (game.name.trim() && /^\d{1,2}$/.test(game.jerseyNumber)) {
+      localStorage.setItem(
+        "full-court-legacy-profile",
+        JSON.stringify({
+          name: game.name.trim(),
+          jerseyNumber: game.jerseyNumber,
+        }),
+      );
+    }
     const newlyEarned = achievementIdsFor(game).filter(
       (id) => !achievementIds.includes(id),
     );
@@ -783,9 +799,17 @@ export default function Home() {
       58,
       93,
     );
+    let remembered: { name?: string; jerseyNumber?: string } = {};
+    try {
+      remembered = JSON.parse(
+        localStorage.getItem("full-court-legacy-profile") ?? "{}",
+      );
+    } catch {}
     setGame({
       ...DEFAULT,
       stage: "setup",
+      name: remembered.name ?? "",
+      jerseyNumber: remembered.jerseyNumber ?? "1",
       startingOvr,
       ovr: startingOvr,
       potential,
@@ -795,12 +819,24 @@ export default function Home() {
   }
 
   function confirmPlayer() {
-    if (!game.name.trim() || !game.origin) return;
+    if (
+      !game.name.trim() ||
+      !game.origin ||
+      !/^\d{1,2}$/.test(game.jerseyNumber)
+    )
+      return;
     const pool =
       game.origin === "usa"
         ? TEAMS.filter((team) => team.path === "college")
         : TEAMS.filter((team) => team.path === "europe" && team.prestige <= 74);
     const team = pool[randomInt(0, pool.length - 1)];
+    localStorage.setItem(
+      "full-court-legacy-profile",
+      JSON.stringify({
+        name: game.name.trim(),
+        jerseyNumber: game.jerseyNumber,
+      }),
+    );
     setGame((current) => ({
       ...current,
       stage: "career",
@@ -1091,6 +1127,35 @@ export default function Home() {
     setShowReset(false);
   }
 
+  async function shareCareer() {
+    const totalGames = game.history.reduce(
+      (sum, season) => sum + season.games,
+      0,
+    );
+    const peak = Math.max(
+      game.ovr,
+      ...game.history.map((season) => season.ovr),
+    );
+    const summary = `${game.name} #${game.jerseyNumber} finished a ${game.history.length}-season Full Court Legacy career: ${totalGames} games, ${peak} peak OVR, ${game.rings} ring${game.rings === 1 ? "" : "s"}, and ${game.legacy} legacy points.`;
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${game.name}'s Full Court Legacy`,
+          text: summary,
+          url,
+        });
+        setShareStatus("CAREER SHARED");
+      } else {
+        await navigator.clipboard.writeText(`${summary} ${url}`);
+        setShareStatus("CAREER SUMMARY COPIED");
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setShareStatus("SHARING ISN'T AVAILABLE ON THIS DEVICE");
+    }
+  }
+
   if (!loaded)
     return (
       <main className="loading-screen">
@@ -1172,27 +1237,55 @@ export default function Home() {
             <p className="kicker">THE JOURNEY STARTS HERE</p>
             <h1>Build your player</h1>
             <p>
-              Your starting ability and hidden ceiling have already been
-              randomized. Choose where the story begins.
+              Choose your identity and starting path. Your team and overall are
+              revealed when the career begins.
             </p>
+            <div className="sealed-rating-note">
+              <strong>RATINGS SEALED</strong>
+              <span>No rerolling for the perfect prospect.</span>
+            </div>
           </div>
           <div className="setup-grid">
             <div className="form-stack">
-              <label>
-                PLAYER NAME
-                <input
-                  value={game.name}
-                  maxLength={24}
-                  placeholder="Enter your name"
-                  onChange={(event) =>
-                    setGame((current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
-                  }
-                  autoFocus
-                />
-              </label>
+              <div className="identity-fields">
+                <label>
+                  PLAYER NAME
+                  <input
+                    value={game.name}
+                    maxLength={24}
+                    placeholder="Enter your name"
+                    onChange={(event) =>
+                      setGame((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
+                    }
+                    autoComplete="name"
+                    autoFocus
+                  />
+                  <small>Remembered for your next career.</small>
+                </label>
+                <label>
+                  JERSEY NUMBER
+                  <input
+                    className="jersey-input"
+                    value={game.jerseyNumber}
+                    maxLength={2}
+                    inputMode="numeric"
+                    pattern="[0-9]{1,2}"
+                    aria-describedby="jersey-help"
+                    onChange={(event) =>
+                      setGame((current) => ({
+                        ...current,
+                        jerseyNumber: event.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 2),
+                      }))
+                    }
+                  />
+                  <small id="jersey-help">00–99</small>
+                </label>
+              </div>
               <fieldset>
                 <legend>STARTING PATH</legend>
                 <div className="origin-grid">
@@ -1273,13 +1366,13 @@ export default function Home() {
             </div>
             <aside className="player-preview">
               <p>PROSPECT CARD</p>
-              <div className="prospect-number">{game.position}</div>
+              <div className="prospect-number">#{game.jerseyNumber || "?"}</div>
               <div className="preview-silhouette" />
               <h2>{game.name || "YOUR NAME"}</h2>
               <span>{game.archetype}</span>
               <div className="preview-stats">
                 <div>
-                  <strong>{game.startingOvr}</strong>
+                  <strong>?</strong>
                   <small>OVR</small>
                 </div>
                 <div>
@@ -1295,10 +1388,14 @@ export default function Home() {
           </div>
           <button
             className="primary-action setup-submit"
-            disabled={!game.name.trim() || !game.origin}
+            disabled={
+              !game.name.trim() ||
+              !game.origin ||
+              !/^\d{1,2}$/.test(game.jerseyNumber)
+            }
             onClick={confirmPlayer}
           >
-            START CAREER <span>→</span>
+            START MY CAREER <span>→</span>
           </button>
         </section>
         {achievementModal}
@@ -1358,6 +1455,10 @@ export default function Home() {
           )}
         </div>
         <div className="retirement-actions">
+          <button className="share-action" onClick={shareCareer}>
+            <span>↗</span>
+            SHARE CAREER
+          </button>
           <button className="primary-action" onClick={resetGame}>
             START ANOTHER CAREER <span>↻</span>
           </button>
@@ -1368,6 +1469,9 @@ export default function Home() {
             VIEW ACHIEVEMENTS
           </button>
         </div>
+        <p className="share-status" aria-live="polite">
+          {shareStatus}
+        </p>
         {achievementModal}
       </main>
     );
@@ -1409,9 +1513,7 @@ export default function Home() {
             </p>
             <h1>{game.name}</h1>
             <div className="player-meta">
-              <span>
-                #{game.position === "PG" ? 1 : game.position === "C" ? 33 : 11}
-              </span>
+              <span>#{game.jerseyNumber}</span>
               <span>{game.position}</span>
               <span>{game.archetype}</span>
               <span>AGE {game.age}</span>
