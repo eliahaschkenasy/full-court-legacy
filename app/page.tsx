@@ -298,7 +298,7 @@ const DEFAULT: GameState = {
   archetype: "Floor General",
   origin: null,
   phase: "europe",
-  age: 18,
+  age: 16,
   year: 2026,
   startingOvr: 50,
   ovr: 50,
@@ -968,6 +968,7 @@ export default function Home() {
   );
   const [shareStatus, setShareStatus] = useState("");
   const [mobileTab, setMobileTab] = useState<MobileTab>("season");
+  const [setupStep, setSetupStep] = useState<1 | 2>(1);
 
   useEffect(() => {
     try {
@@ -1162,6 +1163,7 @@ export default function Home() {
         localStorage.getItem("full-court-legacy-profile") ?? "{}",
       );
     } catch {}
+    setSetupStep(1);
     setGame({
       ...DEFAULT,
       stage: "setup",
@@ -1602,8 +1604,8 @@ export default function Home() {
             <em>LEGACY.</em>
           </h1>
           <p className="intro-description">
-            Start at eighteen in Europe or college. Fight for offers, decide
-            when to enter the draft, survive injuries and build a career worth
+            Start at sixteen in Europe or college. Fight for offers, decide when
+            to enter the draft, survive injuries and build a career worth
             replaying.
           </p>
           <button className="primary-action" onClick={beginCareer}>
@@ -1631,177 +1633,195 @@ export default function Home() {
     return (
       <main className="setup-screen">
         <header className="game-nav">
-          <button className="brand-button" onClick={() => setGame(DEFAULT)}>
+          <button
+            className="brand-button"
+            onClick={() => {
+              setSetupStep(1);
+              setGame(DEFAULT);
+            }}
+          >
             <span className="brand-mark">FCL</span> FULL COURT LEGACY
           </button>
-          <span className="nav-label">CREATE YOUR PLAYER</span>
+          <span className="nav-label">STEP {setupStep} OF 2</span>
           {achievementButton}
         </header>
-        <section className="setup-card">
+        <section className={`setup-card setup-step-${setupStep}`}>
           <div className="setup-heading">
-            <p className="kicker">THE JOURNEY STARTS HERE</p>
-            <h1>Build your player</h1>
-            <p>
-              Choose your identity and starting path. Your team and overall are
-              revealed when the career begins.
+            <p className="kicker">
+              {setupStep === 1 ? "PLAYER IDENTITY" : "PLAYER BUILD"}
             </p>
-            <div className="sealed-rating-note">
-              <strong>RATINGS SEALED</strong>
-              <span>No rerolling for the perfect prospect.</span>
-            </div>
+            <h1>
+              {setupStep === 1 ? "Put your name on it" : "Choose your game"}
+            </h1>
+            <p>
+              {setupStep === 1
+                ? "Pick the name and number that will follow your whole career."
+                : "Choose where the journey begins, then define how you play."}
+            </p>
           </div>
-          <div className="setup-grid">
-            <div className="form-stack">
-              <div className="identity-fields">
-                <label>
-                  PLAYER NAME
-                  <input
-                    value={game.name}
-                    maxLength={24}
-                    placeholder="Enter your name"
-                    onChange={(event) =>
-                      setGame((current) => ({
-                        ...current,
-                        name: event.target.value,
-                      }))
-                    }
-                    autoComplete="name"
-                    autoFocus
-                  />
-                  <small>Remembered for your next career.</small>
-                </label>
-                <label>
-                  JERSEY NUMBER
-                  <input
-                    className="jersey-input"
-                    value={game.jerseyNumber}
-                    maxLength={2}
-                    inputMode="numeric"
-                    pattern="[0-9]{1,2}"
-                    aria-describedby="jersey-help"
-                    onChange={(event) =>
-                      setGame((current) => ({
-                        ...current,
-                        jerseyNumber: event.target.value
-                          .replace(/\D/g, "")
-                          .slice(0, 2),
-                      }))
-                    }
-                  />
-                  <small id="jersey-help">00–99</small>
-                </label>
-              </div>
-              <fieldset>
-                <legend>STARTING PATH</legend>
-                <div className="origin-grid">
-                  <button
-                    aria-pressed={game.origin === "europe"}
-                    onClick={() =>
-                      setGame((current) => ({ ...current, origin: "europe" }))
-                    }
-                  >
-                    <span>EU</span>
-                    <strong>START IN EUROPE</strong>
-                    <small>
-                      Join a professional club. Earn moves to continental giants
-                      or chase the NBA later.
-                    </small>
-                  </button>
-                  <button
-                    aria-pressed={game.origin === "usa"}
-                    onClick={() =>
-                      setGame((current) => ({ ...current, origin: "usa" }))
-                    }
-                  >
-                    <span>US</span>
-                    <strong>START IN COLLEGE</strong>
-                    <small>
-                      Enter the NCAA. Transfer, stay to develop, or declare when
-                      scouts believe.
-                    </small>
-                  </button>
-                </div>
-              </fieldset>
-              <fieldset>
-                <legend>POSITION</legend>
-                <div className="segmented">
-                  {(["PG", "SG", "SF", "PF", "C"] as Position[]).map(
-                    (position) => (
-                      <button
-                        key={position}
-                        aria-pressed={game.position === position}
-                        onClick={() =>
+          {setupStep === 1 ? (
+            <>
+              <div className="setup-grid identity-step-grid">
+                <div className="form-stack identity-form">
+                  <div className="identity-fields">
+                    <label>
+                      PLAYER NAME
+                      <input
+                        value={game.name}
+                        maxLength={24}
+                        placeholder="Enter your name"
+                        onChange={(event) =>
                           setGame((current) => ({
                             ...current,
-                            position,
-                            archetype: ARCHETYPES[position][0],
+                            name: event.target.value,
                           }))
                         }
-                      >
-                        {position}
-                      </button>
-                    ),
-                  )}
+                        autoComplete="name"
+                        autoFocus
+                      />
+                    </label>
+                    <label>
+                      JERSEY NUMBER
+                      <input
+                        className="jersey-input"
+                        value={game.jerseyNumber}
+                        maxLength={2}
+                        inputMode="numeric"
+                        pattern="[0-9]{1,2}"
+                        aria-describedby="jersey-help"
+                        onChange={(event) =>
+                          setGame((current) => ({
+                            ...current,
+                            jerseyNumber: event.target.value
+                              .replace(/\D/g, "")
+                              .slice(0, 2),
+                          }))
+                        }
+                      />
+                      <small id="jersey-help">00–99</small>
+                    </label>
+                  </div>
                 </div>
-              </fieldset>
-              <fieldset>
-                <legend>ARCHETYPE</legend>
-                <div className="archetype-list">
-                  {ARCHETYPES[game.position].map((archetype, index) => (
+                <aside className="player-preview jersey-card">
+                  <p>YOUR JERSEY</p>
+                  <div className="jersey-stage" aria-label="Jersey preview">
+                    <div className="jersey-preview">
+                      <span>{game.name.trim() || "YOUR NAME"}</span>
+                      <strong>{game.jerseyNumber || "?"}</strong>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+              <button
+                className="primary-action setup-submit"
+                disabled={
+                  !game.name.trim() || !/^\d{1,2}$/.test(game.jerseyNumber)
+                }
+                onClick={() => setSetupStep(2)}
+              >
+                CONTINUE TO PLAYER BUILD <span>→</span>
+              </button>
+            </>
+          ) : (
+            <div className="build-step">
+              <div className="form-stack">
+                <fieldset>
+                  <legend>STARTING PATH</legend>
+                  <div className="origin-grid">
                     <button
-                      key={archetype}
-                      aria-pressed={game.archetype === archetype}
+                      aria-pressed={game.origin === "europe"}
                       onClick={() =>
-                        setGame((current) => ({ ...current, archetype }))
+                        setGame((current) => ({ ...current, origin: "europe" }))
                       }
                     >
-                      <span>{String(index + 1).padStart(2, "0")}</span>
-                      <strong>{archetype}</strong>
+                      <span>EU</span>
+                      <strong>START IN EUROPE</strong>
                       <small>
-                        {index === 0
-                          ? "Balanced foundation"
-                          : index === 1
-                            ? "Offensive upside"
-                            : "Defense changes games"}
+                        Join a pro club and earn your way toward Europe&apos;s
+                        elite.
                       </small>
                     </button>
-                  ))}
-                </div>
-              </fieldset>
-            </div>
-            <aside className="player-preview">
-              <p>PROSPECT CARD</p>
-              <div className="prospect-number">#{game.jerseyNumber || "?"}</div>
-              <div className="preview-silhouette" />
-              <h2>{game.name || "YOUR NAME"}</h2>
-              <span>{game.archetype}</span>
-              <div className="preview-stats">
-                <div>
-                  <strong>?</strong>
-                  <small>OVR</small>
-                </div>
-                <div>
-                  <strong>?</strong>
-                  <small>HIDDEN POT</small>
-                </div>
-                <div>
-                  <strong>18</strong>
-                  <small>AGE</small>
+                    <button
+                      aria-pressed={game.origin === "usa"}
+                      onClick={() =>
+                        setGame((current) => ({ ...current, origin: "usa" }))
+                      }
+                    >
+                      <span>US</span>
+                      <strong>START IN COLLEGE</strong>
+                      <small>
+                        Build your name in the NCAA and enter the draft when
+                        ready.
+                      </small>
+                    </button>
+                  </div>
+                </fieldset>
+                <div className="build-options-grid">
+                  <fieldset>
+                    <legend>POSITION</legend>
+                    <div className="segmented">
+                      {(["PG", "SG", "SF", "PF", "C"] as Position[]).map(
+                        (position) => (
+                          <button
+                            key={position}
+                            aria-pressed={game.position === position}
+                            onClick={() =>
+                              setGame((current) => ({
+                                ...current,
+                                position,
+                                archetype: ARCHETYPES[position][0],
+                              }))
+                            }
+                          >
+                            {position}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  </fieldset>
+                  <fieldset>
+                    <legend>ARCHETYPE</legend>
+                    <div className="archetype-list">
+                      {ARCHETYPES[game.position].map((archetype, index) => (
+                        <button
+                          key={archetype}
+                          aria-pressed={game.archetype === archetype}
+                          onClick={() =>
+                            setGame((current) => ({ ...current, archetype }))
+                          }
+                        >
+                          <span>{String(index + 1).padStart(2, "0")}</span>
+                          <strong>{archetype}</strong>
+                          <small>
+                            {index === 0
+                              ? "Balanced foundation"
+                              : index === 1
+                                ? "Offensive upside"
+                                : "Defense changes games"}
+                          </small>
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
                 </div>
               </div>
-            </aside>
-          </div>
-          <button
-            className="primary-action setup-submit"
-            disabled={
-              !game.name.trim() ||
-              !game.origin ||
-              !/^\d{1,2}$/.test(game.jerseyNumber)
-            }
-            onClick={confirmPlayer}
-          >
-            START MY CAREER <span>→</span>
-          </button>
+              <div className="setup-actions">
+                <button
+                  className="secondary-action"
+                  onClick={() => setSetupStep(1)}
+                >
+                  BACK
+                </button>
+                <button
+                  className="primary-action"
+                  disabled={!game.origin}
+                  onClick={confirmPlayer}
+                >
+                  START MY CAREER <span>→</span>
+                </button>
+              </div>
+            </div>
+          )}
         </section>
         {achievementModal}
       </main>

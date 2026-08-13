@@ -16,12 +16,15 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /full-court-legacy-save/);
   assert.match(page, /playSeason/);
   assert.match(page, /randomInt\(43, 58\)/);
-  assert.match(page, /HIDDEN POT/);
+  assert.match(page, /age: 16/);
   assert.match(page, /START IN EUROPE/);
   assert.match(page, /START IN COLLEGE/);
   assert.match(page, /DECLARE FOR THE DRAFT/);
   assert.match(page, /START MY CAREER/);
   assert.match(page, /jerseyNumber/);
+  assert.match(page, /STEP \{setupStep\} OF 2/);
+  assert.match(page, /CONTINUE TO PLAYER BUILD/);
+  assert.match(page, /YOUR JERSEY/);
   assert.match(page, /full-court-legacy-profile/);
   assert.match(page, /shareCareer/);
   assert.match(page, /createCareerCard/);
@@ -31,7 +34,9 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /OfferMetrics/);
   assert.match(page, /TITLE OUTLOOK/);
   assert.match(page, /SHARE CAREER/);
-  assert.match(page, /<strong>\?<\/strong>\s*<small>OVR/);
+  assert.doesNotMatch(page, /RATINGS SEALED/);
+  assert.doesNotMatch(page, /Remembered for your next career/);
+  assert.doesNotMatch(page, /<small>HIDDEN POT<\/small>/);
   assert.match(page, /Featured starter/);
   assert.match(page, /MORE PLAYTIME/);
   assert.match(page, /SeasonResultModal/);
