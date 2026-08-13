@@ -20,6 +20,13 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /START IN EUROPE/);
   assert.match(page, /START IN COLLEGE/);
   assert.match(page, /DECLARE FOR THE DRAFT/);
+  assert.match(page, /START CAREER/);
+  assert.match(page, /Featured starter/);
+  assert.match(page, /MORE PLAYTIME/);
+  assert.match(page, /SeasonResultModal/);
+  assert.match(page, /nba-logo\.svg/);
+  assert.match(page, /no major injury/);
+  assert.match(page, /game\.potential/);
   assert.match(page, /chooseDestination/);
   assert.match(page, /full-court-legacy-achievements/);
   assert.match(page, /Hidden Gem/);
@@ -31,6 +38,7 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(layout, /Full Court Legacy/);
   assert.match(layout, /og\.png/);
   assert.match(css, /prefers-reduced-motion/);
+  assert.match(css, /max-width: 390px/);
   assert.match(packageJson, /"build:pages": "next build"/);
   assert.doesNotMatch(page, /SkeletonPreview|codex-preview/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
