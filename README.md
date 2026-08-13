@@ -1,8 +1,8 @@
 # Full Court Legacy
 
-A season-by-season basketball career simulator. Start at age 16, make one defining choice each year, and navigate development, contracts, transfers, money, injuries, relationships, awards, championships, national-team opportunities, and retirement.
+A season-by-season basketball career simulator. Start at age 18 in Europe or college with randomized ability and a hidden ceiling. Make one defining choice each year, then decide whether to stay, accept an earned offer, or enter the NBA draft. Navigate development, contracts, transfers, money, injuries, relationships, awards, championships, national-team opportunities, and retirement.
 
-Careers are saved in the browser on the player's device.
+Careers are saved in the browser on the player's device. Achievement progress persists across careers to reward different routes and repeat play.
 
 ## Run locally
 

@@ -15,6 +15,15 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /FULL COURT LEGACY/);
   assert.match(page, /full-court-legacy-save/);
   assert.match(page, /playSeason/);
+  assert.match(page, /randomInt\(43, 58\)/);
+  assert.match(page, /HIDDEN POT/);
+  assert.match(page, /START IN EUROPE/);
+  assert.match(page, /START IN COLLEGE/);
+  assert.match(page, /DECLARE FOR THE DRAFT/);
+  assert.match(page, /chooseDestination/);
+  assert.match(page, /full-court-legacy-achievements/);
+  assert.match(page, /Hidden Gem/);
+  assert.match(page, /College eligibility is complete/);
   assert.match(page, /CONTRACT/);
   assert.match(page, /INNER CIRCLE/);
   assert.match(page, /CAREER LEDGER/);
