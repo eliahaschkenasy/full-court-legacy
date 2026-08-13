@@ -24,6 +24,12 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /jerseyNumber/);
   assert.match(page, /full-court-legacy-profile/);
   assert.match(page, /shareCareer/);
+  assert.match(page, /createCareerCard/);
+  assert.match(page, /calculateOvr/);
+  assert.match(page, /PlayerAttributes/);
+  assert.match(page, /mobile-career-tabs/);
+  assert.match(page, /OfferMetrics/);
+  assert.match(page, /TITLE OUTLOOK/);
   assert.match(page, /SHARE CAREER/);
   assert.match(page, /<strong>\?<\/strong>\s*<small>OVR/);
   assert.match(page, /Featured starter/);
@@ -44,6 +50,9 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(layout, /og\.png/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /max-width: 390px/);
+  assert.match(css, /mobile-tab-season/);
+  assert.match(css, /career-card-preview/);
+  assert.match(css, /offer-metrics/);
   assert.match(packageJson, /"build:pages": "next build"/);
   assert.doesNotMatch(page, /SkeletonPreview|codex-preview/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);

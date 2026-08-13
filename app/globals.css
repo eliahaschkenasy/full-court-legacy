@@ -2123,6 +2123,384 @@ h3,
   }
 }
 
+/* Career depth: mobile navigation, offer comparisons, attributes and share cards. */
+.mobile-career-tabs {
+  display: none;
+}
+
+.mobile-career-summary {
+  display: none;
+}
+
+.offseason-grid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.destination-card {
+  min-height: 430px;
+  padding-bottom: 60px;
+}
+
+.destination-card .offer-pitch {
+  min-height: 48px;
+  max-width: 100%;
+  margin-bottom: 16px;
+}
+
+.offer-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.offer-metrics > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.offer-metrics dt {
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.offer-metrics dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.playtime-card .offer-metrics dd {
+  color: var(--cyan);
+}
+
+.stay-card .offer-metrics dd {
+  color: var(--lime);
+}
+
+.draft-metrics {
+  margin-top: 17px;
+}
+
+.result-attributes {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.result-attributes > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.result-attributes span {
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.result-attributes strong {
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: 23px;
+}
+
+.result-attributes small {
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.result-attributes > p {
+  grid-column: 1/-1;
+  margin: 0;
+  padding: 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.career-card-preview {
+  width: min(900px, 94vw);
+  aspect-ratio: 1200 / 630;
+  margin: 28px 0 6px;
+  padding: 26px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  text-align: left;
+  background: repeating-linear-gradient(
+      90deg,
+      transparent 0 59px,
+      #ffffff06 60px
+    ),
+    radial-gradient(
+      circle at 90% 10%,
+      color-mix(in srgb, var(--cyan) 18%, transparent),
+      transparent 28%
+    ),
+    linear-gradient(145deg, #0b1019, #17213a);
+  border: 1px solid #39465f;
+  box-shadow: 0 30px 80px #0009;
+}
+
+.career-card-preview::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: var(--lime);
+}
+
+.career-card-brand {
+  display: grid;
+  grid-template-columns: 42px 1fr 48px;
+  align-items: center;
+  gap: 12px;
+}
+
+.career-card-brand .brand-mark {
+  width: 42px;
+  height: 42px;
+  font-size: 11px;
+}
+
+.career-card-brand > div {
+  display: grid;
+  gap: 4px;
+}
+
+.career-card-brand strong {
+  color: var(--lime);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+}
+
+.career-card-brand small {
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.career-card-player {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 26px 0 20px;
+}
+
+.career-card-player p {
+  margin: 0 0 5px;
+  color: var(--cyan);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.career-card-player h3 {
+  margin: 0;
+  font-size: clamp(38px, 6vw, 68px);
+  line-height: 0.8;
+  text-transform: uppercase;
+}
+
+.career-card-player > div:last-child {
+  display: grid;
+  justify-items: end;
+}
+
+.career-card-player > div:last-child strong {
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  color: #d8e1f5;
+  font-size: 64px;
+  line-height: 0.8;
+}
+
+.career-card-player > div:last-child span,
+.career-card-journey span {
+  color: var(--lime);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.career-card-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.career-card-stats div {
+  display: grid;
+  gap: 3px;
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.career-card-stats strong {
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: 25px;
+}
+
+.career-card-stats span {
+  color: var(--muted);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.career-card-journey {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.career-card-journey strong {
+  overflow: hidden;
+  color: #a9b4ca;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.retirement-screen {
+  justify-content: flex-start;
+  overflow: auto;
+}
+
+@media (max-width: 680px) {
+  .mobile-career-tabs {
+    position: sticky;
+    top: 60px;
+    z-index: 29;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0 12px;
+    background: #090d16f2;
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(12px);
+  }
+
+  .mobile-career-tabs button {
+    min-height: 48px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+
+  .mobile-career-tabs button[aria-pressed="true"] {
+    border-bottom-color: var(--lime);
+    color: var(--ink);
+  }
+
+  .dashboard-grid .mobile-panel {
+    display: none;
+  }
+
+  .dashboard-grid.mobile-tab-season .mobile-panel-season,
+  .dashboard-grid.mobile-tab-career .mobile-panel-career {
+    display: block;
+  }
+
+  .dashboard-grid.mobile-tab-player .main-column {
+    display: none;
+  }
+
+  .dashboard-grid.mobile-tab-player .mobile-panel-player {
+    display: grid;
+  }
+
+  .dashboard-grid.mobile-tab-season .mobile-panel-player,
+  .dashboard-grid.mobile-tab-career .mobile-panel-player {
+    display: none;
+  }
+
+  .mobile-career-summary {
+    display: grid;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .mobile-panel-player .legacy-panel,
+  .mobile-panel-player .achievement-progress {
+    display: none;
+  }
+
+  .history-panel {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .offseason-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .destination-card {
+    min-height: 420px;
+  }
+
+  .result-attributes {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .result-attributes > div:last-child {
+    grid-column: 1/-1;
+  }
+
+  .career-card-preview {
+    width: min(440px, 96vw);
+    aspect-ratio: auto;
+    padding: 20px;
+  }
+
+  .career-card-player {
+    margin: 24px 0 18px;
+  }
+
+  .career-card-player h3 {
+    font-size: 42px;
+  }
+
+  .career-card-player > div:last-child strong {
+    font-size: 52px;
+  }
+
+  .career-card-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .career-card-stats div:nth-child(4),
+  .career-card-stats div:nth-child(5) {
+    grid-column: span 1;
+  }
+
+  .retirement-screen {
+    padding: 34px 12px 60px;
+  }
+}
+
 /* UX refinement: isolated crests, private prospect ratings and faster setup. */
 .identity-fields {
   display: grid;
