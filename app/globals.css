@@ -1341,9 +1341,11 @@ fieldset {
   gap: 12px;
 }
 .destination-card {
-  min-height: 230px;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
   text-align: left;
-  padding: 20px;
+  padding: 18px;
   position: relative;
   background: linear-gradient(145deg, #151c2b, #0e131e);
   border: 1px solid var(--line);
@@ -1378,11 +1380,8 @@ fieldset {
   font-size: 11px;
   line-height: 1.5;
 }
-.destination-card > span {
-  position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: 17px;
+.destination-card > .destination-action {
+  margin-top: auto;
   padding-top: 11px;
   border-top: 1px solid var(--line);
   color: var(--lime);
@@ -2119,7 +2118,7 @@ h3,
   }
 
   .destination-card {
-    min-height: 224px;
+    min-height: 0;
     padding: 18px;
   }
 
@@ -2127,11 +2126,6 @@ h3,
     max-width: calc(100% - 4px);
     font-size: 25px;
     line-height: 1;
-  }
-
-  .destination-card > span {
-    right: 18px;
-    left: 18px;
   }
 
   .event-panel {
@@ -2248,14 +2242,19 @@ h3,
 }
 
 .destination-card {
-  min-height: 430px;
-  padding-bottom: 60px;
+  min-height: 0;
+  padding-bottom: 18px;
 }
 
 .destination-card .offer-pitch {
-  min-height: 48px;
+  min-height: 0;
   max-width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 0;
+}
+
+.destination-card .offer-metrics {
+  margin-top: 10px;
+  margin-bottom: 14px;
 }
 
 .offer-metrics {
@@ -2569,7 +2568,7 @@ h3,
   }
 
   .destination-card {
-    min-height: 420px;
+    min-height: 0;
   }
 
   .result-attributes {

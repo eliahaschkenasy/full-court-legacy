@@ -62,7 +62,9 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /BEGIN NBA CAREER/);
   assert.match(page, /nba-logo\.svg/);
   assert.match(page, /randomInt\(1, 100\) <= 40/);
-  assert.match(page, /clamp\(attributes\.scoring, 30, 70\)/);
+  assert.match(page, /MIDGAME_SITUATIONS/);
+  assert.match(page, /MIDGAME_SITUATION_KEYS/);
+  assert.match(page, /clamp\(attributes\[attribute\], 30, 70\)/);
   assert.match(page, /randomInt\(3, 7\)/);
   assert.match(page, /randomInt\(1, 4\)/);
   assert.doesNotMatch(page, /clamped from 30% to 70%/);
@@ -70,6 +72,15 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /Take the shot/);
   assert.match(page, /Call your own number and trust your scoring/);
   assert.match(page, /Run the coach/);
+  assert.match(page, /Take the assignment/);
+  assert.match(page, /Stay in the scheme/);
+  assert.match(page, /Call your own set/);
+  assert.match(page, /Run the coach's set/);
+  assert.match(page, /Crash the glass/);
+  assert.match(page, /Get back on defense/);
+  assert.match(page, /Attempt the chase-down/);
+  assert.match(page, /Concede the layup/);
+  assert.match(page, /if \(situation\.rolePenalty\) role = demoteRole\(role\)/);
   assert.doesNotMatch(page, /choose-link/);
   assert.match(page, /game\.potential/);
   assert.match(page, /startingOvr \+ randomInt\(30, 45\)/);
@@ -81,10 +92,12 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(page, /reservedOffseasonOptions/);
   assert.match(page, /offers\.slice\(0, Math\.max\(0, 3 - reservedOffseasonOptions\)\)/);
   assert.match(page, /visibleOffers\.map/);
+  assert.match(page, /className="destination-action"/);
   assert.match(page, /function retirementChance/);
   assert.match(page, /return \(age - 29\) \* 10/);
   assert.match(page, /game\.age >= 38/);
   assert.match(page, /retirementOffered/);
+  assert.match(page, /game\.retirementOffered \|\|/);
   assert.match(page, /RETIRE FROM BASKETBALL/);
   assert.match(page, /onClick=\{retirePlayer\}/);
   assert.match(page, /full-court-legacy-achievements/);
@@ -111,6 +124,7 @@ test("ships the Full Court Legacy experience", async () => {
   assert.match(css, /mobile-tab-season/);
   assert.match(css, /career-card-preview/);
   assert.match(css, /offer-metrics/);
+  assert.match(css, /\.destination-card > \.destination-action/);
   assert.match(css, /retirement-choice-card/);
   assert.match(css, /Sleeveless tank silhouette/);
   assert.match(css, /border-radius: 42px 42px 14px 14px/);

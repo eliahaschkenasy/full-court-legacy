@@ -19,6 +19,12 @@ type AttributeKey =
   | "defense"
   | "rebounding"
   | "athleticism";
+type MidgameSituationKey =
+  | "shot"
+  | "defense"
+  | "playmaking"
+  | "rebounding"
+  | "athleticism";
 
 type PlayerAttributes = Record<AttributeKey, number>;
 
@@ -320,6 +326,124 @@ const ATTRIBUTE_LABELS: Record<AttributeKey, string> = {
   rebounding: "REBOUNDING",
   athleticism: "ATHLETICISM",
 };
+
+const MIDGAME_SITUATIONS: Record<
+  MidgameSituationKey,
+  {
+    attribute: AttributeKey;
+    kicker: string;
+    headline: string;
+    prompt: string;
+    chanceLabel: string;
+    riskEyebrow: string;
+    riskTitle: string;
+    riskDescription: string;
+    safeEyebrow: string;
+    safeTitle: string;
+    safeDescription: string;
+    successText: string;
+    failureText: string;
+    safeResult: string;
+    rolePenalty: boolean;
+  }
+> = {
+  shot: {
+    attribute: "scoring",
+    kicker: "FINAL POSSESSION",
+    headline: "Down one. Who decides the game?",
+    prompt: "Down one. Final possession. The ball is in your hands.",
+    chanceLabel: "SHOT CHANCE",
+    riskEyebrow: "BET ON YOURSELF",
+    riskTitle: "Take the shot",
+    riskDescription:
+      "Call your own number and trust your scoring to decide the game.",
+    safeEyebrow: "TRUST THE SYSTEM",
+    safeTitle: "Run the coach's play",
+    safeDescription:
+      "Execute the call exactly as drawn up and let the possession play out.",
+    successText: "You called your own number and hit the game-winner.",
+    failureText: "The shot missed.",
+    safeResult:
+      "You ran the coach's play. The season moved on without changing your ratings or role.",
+    rolePenalty: true,
+  },
+  defense: {
+    attribute: "defense",
+    kicker: "CLUTCH ASSIGNMENT",
+    headline: "Their star is taking over. Who guards them?",
+    prompt: "Their star is taking over, and the next matchup could decide the game.",
+    chanceLabel: "DEFENSE CHANCE",
+    riskEyebrow: "TAKE RESPONSIBILITY",
+    riskTitle: "Take the assignment",
+    riskDescription: "Wave off the switch and guard their star yourself.",
+    safeEyebrow: "TRUST THE COVERAGE",
+    safeTitle: "Stay in the scheme",
+    safeDescription: "Keep the planned matchup and protect the team structure.",
+    successText: "You shut down their star.",
+    failureText: "Their star scored on you.",
+    safeResult:
+      "You stayed in the scheme. The season moved on without changing your ratings or role.",
+    rolePenalty: true,
+  },
+  playmaking: {
+    attribute: "playmaking",
+    kicker: "OFFENSE STALLED",
+    headline: "The offense has stopped moving. Who calls the set?",
+    prompt: "The offense has stalled, and the team needs one clean possession.",
+    chanceLabel: "PLAYMAKING CHANCE",
+    riskEyebrow: "READ THE FLOOR",
+    riskTitle: "Call your own set",
+    riskDescription: "Change the play and trust your read of the defense.",
+    safeEyebrow: "FOLLOW THE PLAN",
+    safeTitle: "Run the coach's set",
+    safeDescription: "Use the play from the sideline exactly as designed.",
+    successText: "Your set broke the defense open.",
+    failureText: "The possession broke down.",
+    safeResult:
+      "You ran the coach's set. The season moved on without changing your ratings or role.",
+    rolePenalty: true,
+  },
+  rebounding: {
+    attribute: "rebounding",
+    kicker: "CRUCIAL REBOUND",
+    headline: "The shot is up. Do you attack the glass?",
+    prompt: "A crucial shot is in the air, and the rebound is there to be won.",
+    chanceLabel: "REBOUNDING CHANCE",
+    riskEyebrow: "WIN THE BOARD",
+    riskTitle: "Crash the glass",
+    riskDescription: "Commit to the rebound and try to create another possession.",
+    safeEyebrow: "PROTECT TRANSITION",
+    safeTitle: "Get back on defense",
+    safeDescription: "Leave the rebound and stop the opponent's fast break.",
+    successText: "You owned the glass.",
+    failureText: "You were beaten to the ball.",
+    safeResult:
+      "You got back on defense. The season moved on without changing your ratings or role.",
+    rolePenalty: false,
+  },
+  athleticism: {
+    attribute: "athleticism",
+    kicker: "CHASE-DOWN CHANCE",
+    headline: "A guard breaks free. Do you chase the block?",
+    prompt: "A guard is free in transition, with one last chance to stop the layup.",
+    chanceLabel: "ATHLETICISM CHANCE",
+    riskEyebrow: "MAKE THE SPECTACULAR PLAY",
+    riskTitle: "Attempt the chase-down",
+    riskDescription: "Explode toward the rim and try to erase the layup.",
+    safeEyebrow: "AVOID THE RISK",
+    safeTitle: "Concede the layup",
+    safeDescription: "Let the play go and avoid a reckless foul or collision.",
+    successText: "You erased the layup.",
+    failureText: "You arrived late.",
+    safeResult:
+      "You let the play go. The season moved on without changing your ratings or role.",
+    rolePenalty: false,
+  },
+};
+
+const MIDGAME_SITUATION_KEYS = Object.keys(
+  MIDGAME_SITUATIONS,
+) as MidgameSituationKey[];
 
 const POSITION_GROWTH_WEIGHTS: Record<Position, PlayerAttributes> = {
   PG: {
@@ -807,7 +931,9 @@ export default function Home() {
   const [shareStatus, setShareStatus] = useState("");
   const [mobileTab, setMobileTab] = useState<MobileTab>("season");
   const [setupStep, setSetupStep] = useState<1 | 2>(1);
-  const [midgameDecision, setMidgameDecision] = useState(false);
+  const [midgameDecision, setMidgameDecision] = useState<
+    MidgameSituationKey | false
+  >(false);
 
   useEffect(() => {
     try {
@@ -988,10 +1114,15 @@ export default function Home() {
 
   function startSeason() {
     if (randomInt(1, 100) <= 40) {
-      setMidgameDecision(true);
+      const situationKey =
+        MIDGAME_SITUATION_KEYS[
+          randomInt(0, MIDGAME_SITUATION_KEYS.length - 1)
+        ];
+      const situation = MIDGAME_SITUATIONS[situationKey];
+      setMidgameDecision(situationKey);
       setGame((current) => ({
         ...current,
-        lastEvent: "Down one. Final possession. The ball is in your hands.",
+        lastEvent: situation.prompt,
         lastDelta: 0,
       }));
       return;
@@ -999,26 +1130,37 @@ export default function Home() {
     completeSeason();
   }
 
-  function resolveMidgameDecision(action: "shot" | "coach") {
+  function resolveMidgameDecision(action: "risk" | "safe") {
+    if (!midgameDecision) return;
+    const situation = MIDGAME_SITUATIONS[midgameDecision];
     const attributes = { ...game.attributes };
     let role = game.role;
-    let midgameEvent = "You ran the coach's play. The season moved on without changing your ratings or role.";
+    let midgameEvent = situation.safeResult;
 
-    if (action === "shot") {
-      const makeChance = clamp(attributes.scoring, 30, 70);
-      const made = randomInt(1, 100) <= makeChance;
-      if (made) {
-        const scoringGain = randomInt(3, 7);
-        const previousScoring = attributes.scoring;
-        attributes.scoring = clamp(attributes.scoring + scoringGain, 0, 99);
-        midgameEvent = `You called your own number and hit the game-winner. Scoring +${attributes.scoring - previousScoring}.`;
+    if (action === "risk") {
+      const attribute = situation.attribute;
+      const attributeLabel =
+        ATTRIBUTE_LABELS[attribute][0] +
+        ATTRIBUTE_LABELS[attribute].slice(1).toLowerCase();
+      const successChance = clamp(attributes[attribute], 30, 70);
+      const succeeded = randomInt(1, 100) <= successChance;
+      const previousValue = attributes[attribute];
+      if (succeeded) {
+        attributes[attribute] = clamp(
+          attributes[attribute] + randomInt(3, 7),
+          0,
+          99,
+        );
+        midgameEvent = `${situation.successText} ${attributeLabel} +${attributes[attribute] - previousValue}.`;
       } else {
-        const scoringLoss = randomInt(1, 4);
-        const previousScoring = attributes.scoring;
-        attributes.scoring = clamp(attributes.scoring - scoringLoss, 0, 99);
+        attributes[attribute] = clamp(
+          attributes[attribute] - randomInt(1, 4),
+          0,
+          99,
+        );
         const previousRole = role;
-        role = demoteRole(role);
-        midgameEvent = `The shot missed. Scoring -${previousScoring - attributes.scoring}${role === previousRole ? "." : ` and your role fell to ${role}.`}`;
+        if (situation.rolePenalty) role = demoteRole(role);
+        midgameEvent = `${situation.failureText} ${attributeLabel} -${previousValue - attributes[attribute]}${role === previousRole ? "." : ` and your role fell to ${role}.`}`;
       }
     }
 
@@ -1143,6 +1285,7 @@ export default function Home() {
     const nextHistory = [season, ...game.history];
     const mandatoryRetirement = game.age >= 38;
     const retirementOffered =
+      game.retirementOffered ||
       mandatoryRetirement ||
       randomInt(1, 100) <= retirementChance(game.age);
     const nextOffers = mandatoryRetirement
@@ -1213,7 +1356,6 @@ export default function Home() {
       offseason: false,
       offers: [],
       draftEligible: false,
-      retirementOffered: false,
       lastEvent: staying
         ? `You chose continuity with ${destination.name}.`
         : `${destination.name} earned your signature. Now prove the move was deserved.`,
@@ -1262,7 +1404,6 @@ export default function Home() {
       offseason: false,
       offers: [],
       draftEligible: false,
-      retirementOffered: false,
       lastEvent: `Draft night: ${destination.name} called your name. The NBA starts now.`,
     }));
     setMidgameDecision(false);
@@ -1669,6 +1810,9 @@ export default function Home() {
   const ovrTone = game.lastDelta > 0 ? "+" : "";
   const collegeEligibilityOver = game.team.path === "college" && game.age >= 22;
   const mandatoryRetirement = game.age >= 39 && game.retirementOffered;
+  const activeMidgameSituation = midgameDecision
+    ? MIDGAME_SITUATIONS[midgameDecision]
+    : null;
   const stayAvailable = !mandatoryRetirement && !collegeEligibilityOver;
   const reservedOffseasonOptions =
     Number(stayAvailable) +
@@ -1797,7 +1941,7 @@ export default function Home() {
                         salary={game.salary}
                         ovr={game.ovr}
                       />
-                      <span>COMMIT TO STAY →</span>
+                      <span className="destination-action">COMMIT TO STAY →</span>
                     </button>
                   )}
                     {!mandatoryRetirement && visibleOffers.map(({ team, offer }) => (
@@ -1822,7 +1966,7 @@ export default function Home() {
                         salary={salaryFor(team, game.ovr)}
                         ovr={game.ovr}
                       />
-                      <span>ACCEPT OFFER →</span>
+                      <span className="destination-action">ACCEPT OFFER →</span>
                     </button>
                   ))}
                     {!mandatoryRetirement && game.draftEligible && (
@@ -1860,7 +2004,7 @@ export default function Home() {
                           <dd>DRAFT NIGHT</dd>
                         </div>
                       </dl>
-                      <span>ENTER THE DRAFT →</span>
+                      <span className="destination-action">ENTER THE DRAFT →</span>
                       </button>
                     )}
                     {game.retirementOffered && (
@@ -1875,7 +2019,7 @@ export default function Home() {
                           Close the final chapter and reveal your complete career
                           legacy.
                         </div>
-                        <span>RETIRE →</span>
+                        <span className="destination-action">RETIRE →</span>
                       </button>
                     )}
                   </div>
@@ -1890,34 +2034,38 @@ export default function Home() {
                 )}
               </>
             ) : (
-              midgameDecision ? (
+              activeMidgameSituation ? (
                 <>
                   <div className="section-title">
                     <div>
-                      <p className="kicker">FINAL POSSESSION</p>
-                      <h2>Down one. Who decides the game?</h2>
+                      <p className="kicker">{activeMidgameSituation.kicker}</p>
+                      <h2>{activeMidgameSituation.headline}</h2>
                     </div>
-                    <span>{clamp(game.attributes.scoring, 30, 70)}% SHOT CHANCE</span>
+                    <span>
+                      {clamp(
+                        game.attributes[activeMidgameSituation.attribute],
+                        30,
+                        70,
+                      )}
+                      % {activeMidgameSituation.chanceLabel}
+                    </span>
                   </div>
                   <div className="choice-grid">
                     <button
                       className="choice-card"
-                      onClick={() => resolveMidgameDecision("shot")}
+                      onClick={() => resolveMidgameDecision("risk")}
                     >
-                      <p>BET ON YOURSELF</p>
-                      <h3>Take the shot</h3>
-                      <div>
-                        Call your own number and trust your scoring to decide the
-                        game.
-                      </div>
+                      <p>{activeMidgameSituation.riskEyebrow}</p>
+                      <h3>{activeMidgameSituation.riskTitle}</h3>
+                      <div>{activeMidgameSituation.riskDescription}</div>
                     </button>
                     <button
                       className="choice-card"
-                      onClick={() => resolveMidgameDecision("coach")}
+                      onClick={() => resolveMidgameDecision("safe")}
                     >
-                      <p>TRUST THE SYSTEM</p>
-                      <h3>Run the coach&apos;s play</h3>
-                      <div>Execute the call exactly as drawn up and let the possession play out.</div>
+                      <p>{activeMidgameSituation.safeEyebrow}</p>
+                      <h3>{activeMidgameSituation.safeTitle}</h3>
+                      <div>{activeMidgameSituation.safeDescription}</div>
                     </button>
                   </div>
                 </>
