@@ -79,10 +79,6 @@ type GameState = {
   contractYears: number;
   salary: number;
   cash: number;
-  morale: number;
-  coach: number;
-  teammates: number;
-  fans: number;
   legacy: number;
   rings: number;
   awards: string[];
@@ -94,6 +90,7 @@ type GameState = {
   offers: TeamOffer[];
   draftEligible: boolean;
   draftProjection: string;
+  retirementOffered: boolean;
 };
 
 type Achievement = { id: string; title: string; body: string; points: number };
@@ -105,7 +102,7 @@ const DEFAULT: GameState = {
   position: "PG",
   origin: null,
   phase: "europe",
-  age: 16,
+  age: 17,
   year: 2026,
   startingOvr: 50,
   ovr: 50,
@@ -122,10 +119,6 @@ const DEFAULT: GameState = {
   contractYears: 1,
   salary: 0.08,
   cash: 0.01,
-  morale: 78,
-  coach: 55,
-  teammates: 60,
-  fans: 5,
   legacy: 0,
   rings: 0,
   awards: [],
@@ -137,68 +130,57 @@ const DEFAULT: GameState = {
   offers: [],
   draftEligible: false,
   draftProjection: "Not on draft boards",
+  retirementOffered: false,
 };
 
 const EVENTS = [
   {
     text: "A veteran stayed late to work on your footwork.",
     delta: 1,
-    morale: 4,
   },
   {
     text: "A fourth-quarter run finally put scouts on notice.",
     delta: 1,
-    morale: 5,
   },
   {
     text: "A minor ankle sprain cost you three weeks.",
     delta: -2,
-    morale: -3,
   },
   {
     text: "Your shooting coach rebuilt your release.",
     delta: 1,
-    morale: 2,
   },
   {
-    text: "A locker-room argument damaged team chemistry.",
+    text: "A locker-room argument became a season-long distraction.",
     delta: -1,
-    morale: -8,
   },
   {
     text: "Heavy minutes exposed gaps in your game.",
     delta: -2,
-    morale: -4,
   },
   {
     text: "A national-team camp raised your confidence.",
     delta: 1,
-    morale: 6,
   },
   {
     text: "A mentor changed how you read pick-and-roll coverages.",
     delta: 1,
-    morale: 4,
   },
   {
     text: "A wrist injury interrupted your best stretch.",
     delta: -3,
-    morale: -6,
   },
   {
     text: "You struggled when opponents adjusted to your tendencies.",
     delta: -2,
-    morale: -5,
   },
   {
     text: "A playoff breakthrough changed the way coaches see you.",
     delta: 1,
-    morale: 7,
   },
   {
     text: "A quiet season left scouts divided about your ceiling.",
     delta: -1,
-    morale: -2,
   },
 ];
 
@@ -465,6 +447,12 @@ function ageGrowthMultiplier(age: number) {
   if (age <= 16) return 3;
   if (age >= 38) return -1.25;
   return multipliers[age] ?? 0;
+}
+
+function retirementChance(age: number) {
+  if (age < 30) return 0;
+  if (age >= 38) return 100;
+  return (age - 29) * 10;
 }
 
 function demoteRole(role: CareerRole) {
@@ -946,20 +934,17 @@ export default function Home() {
       ovr: startingOvr,
       potential,
       attributes,
-      morale: randomInt(66, 88),
     });
     setMidgameDecision(false);
   }
 
   function confirmPlayer() {
-    if (
-      !game.name.trim() ||
-      !game.origin ||
-      !/^\d{1,2}$/.test(game.jerseyNumber)
-    )
+    if (!game.name.trim() || !/^\d{1,2}$/.test(game.jerseyNumber))
       return;
+    const origin: Exclude<Origin, null> =
+      randomInt(0, 1) === 0 ? "europe" : "usa";
     const pool =
-      game.origin === "usa"
+      origin === "usa"
         ? TEAMS.filter(
             (team) =>
               team.path === "college" &&
@@ -986,6 +971,7 @@ export default function Home() {
     setGame((current) => ({
       ...current,
       stage: "career",
+      origin,
       phase: team.path,
       team,
       attributes,
@@ -1022,13 +1008,17 @@ export default function Home() {
       const makeChance = clamp(attributes.scoring, 30, 70);
       const made = randomInt(1, 100) <= makeChance;
       if (made) {
-        attributes.scoring = clamp(attributes.scoring + 5, 0, 99);
-        midgameEvent = `You called your own number and hit the game-winner. Scoring +5.`;
+        const scoringGain = randomInt(3, 7);
+        const previousScoring = attributes.scoring;
+        attributes.scoring = clamp(attributes.scoring + scoringGain, 0, 99);
+        midgameEvent = `You called your own number and hit the game-winner. Scoring +${attributes.scoring - previousScoring}.`;
       } else {
-        attributes.scoring = clamp(attributes.scoring - 2, 0, 99);
+        const scoringLoss = randomInt(1, 4);
+        const previousScoring = attributes.scoring;
+        attributes.scoring = clamp(attributes.scoring - scoringLoss, 0, 99);
         const previousRole = role;
         role = demoteRole(role);
-        midgameEvent = `The shot missed. Scoring -2${role === previousRole ? "." : ` and your role fell to ${role}.`}`;
+        midgameEvent = `The shot missed. Scoring -${previousScoring - attributes.scoring}${role === previousRole ? "." : ` and your role fell to ${role}.`}`;
       }
     }
 
@@ -1097,10 +1087,9 @@ export default function Home() {
           roleScoring[role] * 0.18) *
           10,
       ) / 10;
-    const chemistryBoost = (game.teammates - 50) / 5;
     const titleChance = Math.max(
       2,
-      game.team.prestige + nextOvr + chemistryBoost - 166,
+      game.team.prestige + nextOvr - 166,
     );
     const wonTitle = Math.abs(Math.sin(seed * 5)) * 100 < titleChance;
     const madePlayoffs = game.team.prestige + nextOvr > 146;
@@ -1152,12 +1141,21 @@ export default function Home() {
     };
     const nextAge = game.age + 1;
     const nextHistory = [season, ...game.history];
-    const nextOffers = offersFor(game, nextOvr, nextAge, seed);
+    const mandatoryRetirement = game.age >= 38;
+    const retirementOffered =
+      mandatoryRetirement ||
+      randomInt(1, 100) <= retirementChance(game.age);
+    const nextOffers = mandatoryRetirement
+      ? []
+      : offersFor(game, nextOvr, nextAge, seed);
     const draftEligible =
-      game.team.path !== "nba" && nextAge >= 19 && nextOvr >= 60;
+      !mandatoryRetirement &&
+      game.team.path !== "nba" &&
+      nextAge >= 19 &&
+      nextOvr >= 60;
     const nextState: GameState = {
       ...game,
-      stage: nextAge >= 39 || nextOvr <= 0 ? "retired" : "career",
+      stage: nextOvr <= 0 ? "retired" : "career",
       age: nextAge,
       year: game.year + 1,
       ovr: nextOvr,
@@ -1165,10 +1163,6 @@ export default function Home() {
       role,
       cash: game.cash + game.salary * 0.52,
       contractYears: Math.max(0, game.contractYears - 1),
-      morale: clamp(game.morale + event.morale + (wonTitle ? 12 : 0)),
-      coach: clamp(game.coach + 1),
-      teammates: clamp(game.teammates),
-      fans: clamp(game.fans + Math.max(1, Math.round(points / 6))),
       legacy:
         game.legacy +
         Math.max(0, nextOvr - 62) +
@@ -1179,10 +1173,11 @@ export default function Home() {
       history: nextHistory,
       lastEvent: `${eventText} The offseason is here.`,
       lastDelta: delta,
-      offseason: nextAge < 39 && nextOvr > 0,
+      offseason: nextOvr > 0,
       offers: nextOffers,
       draftEligible,
       draftProjection: projectionFor(nextOvr),
+      retirementOffered,
     };
     setSeasonFeedback({
       season: season.year,
@@ -1212,15 +1207,13 @@ export default function Home() {
       role: staying ? current.role : (offer?.role ?? roleForTeam(destination, current.ovr)),
       salary: salaryFor(destination, current.ovr),
       contractYears: years,
-      coach: staying ? clamp(current.coach + 4) : 48,
-      teammates: staying ? clamp(current.teammates + 4) : 45,
-      morale: clamp(current.morale + (staying ? 3 : 7)),
       teamsPlayed: current.teamsPlayed.includes(destination.name)
         ? current.teamsPlayed
         : [...current.teamsPlayed, destination.name],
       offseason: false,
       offers: [],
       draftEligible: false,
+      retirementOffered: false,
       lastEvent: staying
         ? `You chose continuity with ${destination.name}.`
         : `${destination.name} earned your signature. Now prove the move was deserved.`,
@@ -1262,10 +1255,6 @@ export default function Home() {
       role,
       salary,
       contractYears: 4,
-      coach: 45,
-      teammates: 42,
-      morale: clamp(current.morale + 15),
-      fans: clamp(current.fans + 12),
       legacy: current.legacy + 35,
       teamsPlayed: current.teamsPlayed.includes(destination.name)
         ? current.teamsPlayed
@@ -1273,9 +1262,22 @@ export default function Home() {
       offseason: false,
       offers: [],
       draftEligible: false,
+      retirementOffered: false,
       lastEvent: `Draft night: ${destination.name} called your name. The NBA starts now.`,
     }));
     setMidgameDecision(false);
+  }
+
+  function retirePlayer() {
+    setGame((current) => ({
+      ...current,
+      stage: "retired",
+      offseason: false,
+      offers: [],
+      draftEligible: false,
+      retirementOffered: false,
+      lastEvent: `${current.name} chose to end the journey after ${current.history.length} seasons.`,
+    }));
   }
 
   function resetGame() {
@@ -1295,15 +1297,16 @@ export default function Home() {
       game.ovr,
       ...game.history.map((season) => season.ovr),
     );
-    const summary = `${game.name} #${game.jerseyNumber} finished a ${game.history.length}-season Full Court Legacy career: ${totalGames} games, ${peak} peak OVR, ${game.rings} ring${game.rings === 1 ? "" : "s"}, and ${game.legacy} legacy points.`;
     const url = window.location.href;
+    const summary = `${game.name} #${game.jerseyNumber} finished a ${game.history.length}-season Full Court Legacy career: ${totalGames} games, ${peak} peak OVR, ${game.rings} ring${game.rings === 1 ? "" : "s"}, and ${game.legacy} legacy points.`;
+    const sharedText = `${summary}\nPlay Full Court Legacy: ${url}`;
     setShareStatus("BUILDING YOUR CAREER CARD…");
     try {
       const file = await createCareerCard(game);
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           title: `${game.name}'s Full Court Legacy`,
-          text: summary,
+          text: sharedText,
           url,
           files: [file],
         });
@@ -1318,7 +1321,7 @@ export default function Home() {
         link.remove();
         window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
         try {
-          await navigator.clipboard?.writeText(`${summary} ${url}`);
+          await navigator.clipboard?.writeText(sharedText);
           setShareStatus("CARD SAVED · SUMMARY COPIED");
         } catch {
           setShareStatus("CAREER CARD SAVED");
@@ -1371,9 +1374,9 @@ export default function Home() {
             <em>LEGACY.</em>
           </h1>
           <p className="intro-description">
-            Start at sixteen in Europe or college. Fight for offers, decide when
-            to enter the draft, survive injuries and build a career worth
-            replaying.
+            Rise from an unknown prospect to a basketball legend. Fight for
+            minutes, weigh every offer, survive the unexpected and build a
+            career worth replaying.
           </p>
           <button className="primary-action" onClick={beginCareer}>
             START A NEW CAREER <span>→</span>
@@ -1423,7 +1426,7 @@ export default function Home() {
             <p>
               {setupStep === 1
                 ? "Pick the name and number that will follow your whole career."
-                : "Choose where the journey begins, then define how you play."}
+                : "Choose your position. Your starting path will be revealed when your career begins."}
             </p>
           </div>
           {setupStep === 1 ? (
@@ -1432,7 +1435,7 @@ export default function Home() {
                 <div className="form-stack identity-form">
                   <div className="identity-fields">
                     <label>
-                      PLAYER NAME
+                      <span>NAME</span>
                       <input
                         value={game.name}
                         maxLength={24}
@@ -1448,7 +1451,7 @@ export default function Home() {
                       />
                     </label>
                     <label>
-                      JERSEY NUMBER
+                      <span>JERSEY NUMBER</span>
                       <input
                         className="jersey-input"
                         value={game.jerseyNumber}
@@ -1473,10 +1476,8 @@ export default function Home() {
                   <p>YOUR JERSEY</p>
                   <div className="jersey-stage" aria-label="Jersey preview">
                     <div className="jersey-preview">
-                      <i>FCL</i>
                       <span>{game.name.trim() || "YOUR NAME"}</span>
                       <strong>{game.jerseyNumber || "?"}</strong>
-                      <small>FULL COURT</small>
                     </div>
                   </div>
                 </aside>
@@ -1494,37 +1495,6 @@ export default function Home() {
           ) : (
             <div className="build-step">
               <div className="form-stack">
-                <fieldset>
-                  <legend>STARTING PATH</legend>
-                  <div className="origin-grid">
-                    <button
-                      aria-pressed={game.origin === "europe"}
-                      onClick={() =>
-                        setGame((current) => ({ ...current, origin: "europe" }))
-                      }
-                    >
-                      <span>EU</span>
-                      <strong>START IN EUROPE</strong>
-                      <small>
-                        Join a pro club and earn your way toward Europe&apos;s
-                        elite.
-                      </small>
-                    </button>
-                    <button
-                      aria-pressed={game.origin === "usa"}
-                      onClick={() =>
-                        setGame((current) => ({ ...current, origin: "usa" }))
-                      }
-                    >
-                      <span>US</span>
-                      <strong>START IN COLLEGE</strong>
-                      <small>
-                        Build your name in the NCAA and enter the draft when
-                        ready.
-                      </small>
-                    </button>
-                  </div>
-                </fieldset>
                 <div className="build-options-grid">
                   <fieldset>
                     <legend>POSITION</legend>
@@ -1558,7 +1528,6 @@ export default function Home() {
                 </button>
                 <button
                   className="primary-action"
-                  disabled={!game.origin}
                   onClick={confirmPlayer}
                 >
                   START MY CAREER <span>→</span>
@@ -1676,7 +1645,6 @@ export default function Home() {
         </div>
         <div className="retirement-actions">
           <button className="share-action" onClick={shareCareer}>
-            <span>↗</span>
             SHARE CAREER
           </button>
           <button className="primary-action" onClick={resetGame}>
@@ -1700,6 +1668,15 @@ export default function Home() {
   const current = game.history[0];
   const ovrTone = game.lastDelta > 0 ? "+" : "";
   const collegeEligibilityOver = game.team.path === "college" && game.age >= 22;
+  const mandatoryRetirement = game.age >= 39 && game.retirementOffered;
+  const stayAvailable = !mandatoryRetirement && !collegeEligibilityOver;
+  const reservedOffseasonOptions =
+    Number(stayAvailable) +
+    Number(!mandatoryRetirement && game.draftEligible) +
+    Number(game.retirementOffered);
+  const visibleOffers = mandatoryRetirement
+    ? []
+    : offers.slice(0, Math.max(0, 3 - reservedOffseasonOptions));
   return (
     <main className="career-shell">
       <header className="game-nav">
@@ -1776,22 +1753,36 @@ export default function Home() {
             {game.offseason ? (
               <>
                 <div className="section-title">
-                  <div>
-                    <p className="kicker">YOUR FUTURE</p>
-                    <h2>Choose the next chapter</h2>
+                    <div>
+                      <p className="kicker">
+                        {mandatoryRetirement ? "FINAL DECISION" : "YOUR FUTURE"}
+                      </p>
+                      <h2>
+                        {mandatoryRetirement
+                          ? "Your playing career is complete"
+                          : "Choose the next chapter"}
+                      </h2>
+                    </div>
+                    <span>
+                      {mandatoryRetirement ? "RETIREMENT" : "ROLE · TEAM · DRAFT"}
+                    </span>
                   </div>
-                  <span>ROLE · TEAM · DRAFT</span>
-                </div>
-                <div className="offseason-summary">
-                  <strong>{game.draftProjection}</strong>
-                  <span>
-                    {offers.length
-                      ? `${offers.length} team offer${offers.length > 1 ? "s" : ""}`
-                      : "No outside offers this offseason"}
-                  </span>
-                </div>
-                <div className="offseason-grid">
-                  {!collegeEligibilityOver && (
+                  <div className="offseason-summary">
+                    <strong>
+                      {mandatoryRetirement
+                        ? "FINAL SEASON COMPLETE"
+                        : game.draftProjection}
+                    </strong>
+                    <span>
+                      {mandatoryRetirement
+                        ? "Retirement is the only remaining choice"
+                        : visibleOffers.length
+                        ? `${visibleOffers.length} team offer${visibleOffers.length > 1 ? "s" : ""}`
+                        : "No outside offers this offseason"}
+                    </span>
+                  </div>
+                  <div className="offseason-grid">
+                    {stayAvailable && (
                     <button
                       className="destination-card stay-card"
                       onClick={() => chooseDestination(game.team)}
@@ -1799,10 +1790,6 @@ export default function Home() {
                       {teamMark(game.team, true)}
                       <p>STAY · {game.role.toUpperCase()}</p>
                       <h3>{game.team.name}</h3>
-                      <div className="offer-pitch">
-                        Keep your {game.role.toLowerCase()} role, chemistry and
-                        continuity.
-                      </div>
                       <OfferMetrics
                         team={game.team}
                         role={game.role}
@@ -1813,7 +1800,7 @@ export default function Home() {
                       <span>COMMIT TO STAY →</span>
                     </button>
                   )}
-                  {offers.map(({ team, offer }) => (
+                    {!mandatoryRetirement && visibleOffers.map(({ team, offer }) => (
                     <button
                       className={`destination-card ${offer.direction === "playtime" ? "playtime-card" : ""}`}
                       key={team.name}
@@ -1828,11 +1815,6 @@ export default function Home() {
                             : "STEP-UP OFFER"}
                       </p>
                       <h3>{team.name}</h3>
-                      <div className="offer-pitch">
-                        {offer.direction === "playtime"
-                          ? "A smaller stage, but the offense runs through you."
-                          : "A stronger roster with tougher competition for minutes."}
-                      </div>
                       <OfferMetrics
                         team={team}
                         role={offer.role}
@@ -1843,7 +1825,7 @@ export default function Home() {
                       <span>ACCEPT OFFER →</span>
                     </button>
                   ))}
-                  {game.draftEligible && (
+                    {!mandatoryRetirement && game.draftEligible && (
                     <button
                       className="destination-card draft-card"
                       onClick={declareForDraft}
@@ -1879,10 +1861,25 @@ export default function Home() {
                         </div>
                       </dl>
                       <span>ENTER THE DRAFT →</span>
-                    </button>
-                  )}
-                </div>
-                {collegeEligibilityOver && !game.draftEligible && (
+                      </button>
+                    )}
+                    {game.retirementOffered && (
+                      <button
+                        className="destination-card retirement-choice-card"
+                        onClick={retirePlayer}
+                      >
+                        <div className="retirement-badge">END</div>
+                        <p>RETIRE FROM BASKETBALL</p>
+                        <h3>Walk away on your terms</h3>
+                        <div className="offer-pitch">
+                          Close the final chapter and reveal your complete career
+                          legacy.
+                        </div>
+                        <span>RETIRE →</span>
+                      </button>
+                    )}
+                  </div>
+                  {!mandatoryRetirement && collegeEligibilityOver && !game.draftEligible && (
                   <div className="eligibility-note">
                     <strong>College eligibility is complete.</strong>
                     <span>
@@ -1907,33 +1904,20 @@ export default function Home() {
                       className="choice-card"
                       onClick={() => resolveMidgameDecision("shot")}
                     >
-                      <span className="choice-index">01</span>
                       <p>BET ON YOURSELF</p>
                       <h3>Take the shot</h3>
-                      <div>Your scoring rating decides the roll, clamped from 30% to 70%.</div>
-                      <dl>
-                        <dt>MAKE</dt>
-                        <dd>Win the game · +5 scoring</dd>
-                        <dt>MISS</dt>
-                        <dd>Lose · -2 scoring · Drop one role</dd>
-                      </dl>
-                      <span className="choose-link">TAKE THE SHOT <b>→</b></span>
+                      <div>
+                        Call your own number and trust your scoring to decide the
+                        game.
+                      </div>
                     </button>
                     <button
                       className="choice-card"
                       onClick={() => resolveMidgameDecision("coach")}
                     >
-                      <span className="choice-index">02</span>
                       <p>TRUST THE SYSTEM</p>
                       <h3>Run the coach&apos;s play</h3>
                       <div>Execute the call exactly as drawn up and let the possession play out.</div>
-                      <dl>
-                        <dt>RESULT</dt>
-                        <dd>No ratings or role change</dd>
-                        <dt>RISK</dt>
-                        <dd>None</dd>
-                      </dl>
-                      <span className="choose-link">RUN THE PLAY <b>→</b></span>
                     </button>
                   </div>
                 </>
@@ -2115,20 +2099,6 @@ export default function Home() {
                 <strong>{formatMoney(game.cash)}</strong>
                 <small>ESTIMATED</small>
               </div>
-            </div>
-          </section>
-          <section className="side-panel">
-            <p className="kicker">MINDSET</p>
-            <div className="meter-list">
-              <Meter label="MORALE" value={game.morale} />
-            </div>
-          </section>
-          <section className="side-panel">
-            <p className="kicker">INNER CIRCLE</p>
-            <div className="relationship-list">
-              <Relationship icon="C" label="COACH" value={game.coach} />
-              <Relationship icon="T" label="TEAMMATES" value={game.teammates} />
-              <Relationship icon="F" label="FANS" value={game.fans} />
             </div>
           </section>
           <section className="side-panel legacy-panel">
@@ -2462,43 +2432,6 @@ function AchievementModal({
           CLOSE TROPHY ROOM
         </button>
       </section>
-    </div>
-  );
-}
-
-function Meter({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="meter">
-      <div>
-        <span>{label}</span>
-        <strong>{value}</strong>
-      </div>
-      <div>
-        <i style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function Relationship({
-  icon,
-  label,
-  value,
-}: {
-  icon: string;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="relationship">
-      <span>{icon}</span>
-      <div>
-        <strong>{label}</strong>
-        <div>
-          <i style={{ width: `${value}%` }} />
-        </div>
-      </div>
-      <b>{value}</b>
     </div>
   );
 }

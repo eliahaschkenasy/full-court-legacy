@@ -658,9 +658,9 @@ fieldset {
   min-height: 58px;
 }
 .choice-card {
-  min-height: 270px;
+  min-height: 180px;
   text-align: left;
-  padding: 24px;
+  padding: 20px;
   position: relative;
   background: linear-gradient(145deg, #151c2b, #0e131e);
   border: 1px solid var(--line);
@@ -683,20 +683,12 @@ fieldset {
 .choice-card:hover:before {
   opacity: 1;
 }
-.choice-index {
-  position: absolute;
-  right: 18px;
-  top: 12px;
-  font-family: Impact;
-  font-size: 64px;
-  color: #242d40;
-}
 .choice-card > p {
   color: var(--cyan);
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.15em;
-  margin: 0 0 36px;
+  margin: 0 0 18px;
 }
 .choice-card h3 {
   font-family: Impact, "Arial Narrow";
@@ -710,35 +702,6 @@ fieldset {
   font-size: 12px;
   line-height: 1.5;
   max-width: 78%;
-}
-.choice-card dl {
-  display: grid;
-  grid-template-columns: 55px 1fr;
-  gap: 6px;
-  margin: 18px 0;
-}
-.choice-card dt {
-  font-size: 8px;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-}
-.choice-card dd {
-  font-size: 9px;
-  margin: 0;
-}
-.choose-link {
-  position: absolute;
-  bottom: 20px;
-  left: 24px;
-  right: 24px;
-  display: flex;
-  justify-content: space-between;
-  padding-top: 13px;
-  border-top: 1px solid var(--line);
-  color: var(--lime);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
 }
 .event-panel {
   margin-top: 12px;
@@ -820,15 +783,11 @@ fieldset {
   color: var(--muted);
   font-weight: 900;
 }
-.ratings > div > div,
-.meter > div:last-child,
-.relationship div div {
+.ratings > div > div {
   height: 4px;
   background: #222a3a;
 }
-.ratings i,
-.meter i,
-.relationship i {
+.ratings i {
   display: block;
   height: 100%;
   background: linear-gradient(90deg, var(--violet), var(--cyan));
@@ -931,57 +890,6 @@ fieldset {
   font-size: 24px;
   font-weight: 400;
   margin: 4px 0;
-}
-.meter-list {
-  display: grid;
-  gap: 16px;
-  margin-top: 16px;
-}
-.meter > div:first-child {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 7px;
-}
-.meter span {
-  font-size: 9px;
-  color: var(--muted);
-  font-weight: 800;
-}
-.meter strong {
-  font-size: 10px;
-}
-.relationship-list {
-  display: grid;
-  gap: 13px;
-  margin-top: 16px;
-}
-.relationship {
-  display: grid;
-  grid-template-columns: 28px 1fr 25px;
-  gap: 10px;
-  align-items: center;
-}
-.relationship > span {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  background: #1b2334;
-  border: 1px solid #303a50;
-  color: var(--cyan);
-  font-size: 9px;
-  font-weight: 900;
-}
-.relationship > div {
-  display: grid;
-  gap: 5px;
-}
-.relationship strong {
-  font-size: 8px;
-  letter-spacing: 0.1em;
-}
-.relationship b {
-  font-size: 9px;
 }
 .legacy-score {
   display: flex;
@@ -1281,7 +1189,7 @@ fieldset {
     grid-template-columns: 1fr;
   }
   .choice-card {
-    min-height: 250px;
+    min-height: 170px;
   }
   .event-panel {
     grid-template-columns: 36px 1fr;
@@ -1465,7 +1373,7 @@ fieldset {
   margin: 0 0 9px;
   text-transform: uppercase;
 }
-.destination-card > div:not(.draft-badge) {
+.destination-card > div:not(.draft-badge):not(.retirement-badge) {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.5;
@@ -1488,6 +1396,27 @@ fieldset {
 .draft-card {
   background: radial-gradient(circle at 85% 15%, #533d9b55, transparent 35%),
     linear-gradient(145deg, #151c2b, #0e131e);
+}
+
+.retirement-choice-card {
+  border-color: #8067ff66;
+  background:
+    radial-gradient(circle at 82% 12%, #8067ff36, transparent 34%),
+    linear-gradient(145deg, #151b2b, #0a0f18);
+}
+
+.retirement-badge {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 20px;
+  place-items: center;
+  border: 2px solid var(--violet);
+  border-radius: 50%;
+  color: #c8bbff;
+  font-family: Impact, "Arial Narrow", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.08em;
 }
 .draft-badge {
   display: grid;
@@ -2176,7 +2105,7 @@ h3,
   }
 
   .choice-card {
-    min-height: 286px;
+    min-height: 170px;
     padding: 15px;
   }
 
@@ -2187,22 +2116,6 @@ h3,
   .choice-card > div {
     max-width: 100%;
     font-size: 10px;
-  }
-
-  .choice-card dl {
-    grid-template-columns: 1fr;
-    gap: 3px;
-  }
-
-  .choice-card dd {
-    margin-bottom: 5px;
-    line-height: 1.3;
-  }
-
-  .choose-link {
-    right: 15px;
-    left: 15px;
-    font-size: 7px;
   }
 
   .destination-card {
@@ -2702,12 +2615,23 @@ h3,
 /* UX refinement: isolated crests, private prospect ratings and faster setup. */
 .identity-fields {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 132px;
+  grid-template-columns: minmax(0, 1fr) 150px;
   gap: 12px;
 }
 
 .identity-fields label {
   min-width: 0;
+}
+
+.identity-fields label > span {
+  display: block;
+  min-height: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.identity-fields input {
+  height: 60px;
 }
 
 .identity-fields label > small {
@@ -2805,11 +2729,6 @@ h3,
   cursor: pointer;
 }
 
-.share-action span {
-  margin-right: 8px;
-  font-size: 14px;
-}
-
 .share-action:hover {
   background: var(--cyan);
   color: #061117;
@@ -2826,7 +2745,7 @@ h3,
 
 @media (max-width: 680px) {
   .identity-fields {
-    grid-template-columns: minmax(0, 1fr) 105px;
+    grid-template-columns: minmax(0, 1fr) 118px;
   }
 
   .sealed-rating-note {
@@ -2869,7 +2788,7 @@ h3,
 
 @media (max-width: 390px) {
   .identity-fields {
-    grid-template-columns: minmax(0, 1fr) 92px;
+    grid-template-columns: minmax(0, 1fr) 112px;
     gap: 8px;
   }
 
@@ -2970,26 +2889,42 @@ h3,
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 46px;
+  padding-top: 56px;
   background:
     linear-gradient(90deg, #8067ff 0 4%, #35dcff 4% 6%, transparent 6% 94%, #35dcff 94% 96%, #8067ff 96%),
     repeating-linear-gradient(112deg, transparent 0 7px, #ffffff05 8px, transparent 9px 15px),
     radial-gradient(circle at 50% -8%, #263b5c 0 21%, transparent 22%),
     linear-gradient(145deg, #172e4e, #0b1628 68%);
   border: 2px solid #586987;
+  border-radius: 42px 42px 14px 14px;
+  /* Sleeveless tank silhouette: narrow straps and deep, open armholes. */
   clip-path: polygon(
-    20% 0,
-    35% 7%,
-    65% 7%,
-    80% 0,
-    100% 14%,
-    91% 39%,
-    82% 35%,
-    82% 100%,
-    18% 100%,
-    18% 35%,
-    9% 39%,
-    0 14%
+    28% 0,
+    34% 2%,
+    40% 7%,
+    60% 7%,
+    66% 2%,
+    72% 0,
+    76% 1%,
+    80% 4%,
+    83% 8%,
+    84% 12%,
+    83% 16%,
+    79% 21%,
+    75% 27%,
+    72% 34%,
+    70% 42%,
+    78% 100%,
+    22% 100%,
+    30% 42%,
+    28% 34%,
+    25% 27%,
+    21% 21%,
+    17% 16%,
+    16% 12%,
+    17% 8%,
+    20% 4%,
+    24% 1%
   );
   filter: drop-shadow(0 18px 22px #000c);
 }
@@ -3026,20 +2961,6 @@ h3,
   z-index: 2;
 }
 
-.jersey-preview i {
-  width: 34px;
-  height: 19px;
-  margin-bottom: 7px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #caff3570;
-  color: var(--lime);
-  font-size: 7px;
-  font-style: normal;
-  font-weight: 1000;
-  letter-spacing: 0.1em;
-}
-
 .jersey-preview span {
   max-width: 70%;
   overflow: hidden;
@@ -3063,14 +2984,6 @@ h3,
   -webkit-text-stroke: 2px #8067ff;
   paint-order: stroke fill;
   text-shadow: 3px 3px 0 #07101d, 0 0 24px #35dcff28;
-}
-
-.jersey-preview small {
-  margin-top: 1px;
-  color: #35dcffb8;
-  font-size: 6px;
-  font-weight: 900;
-  letter-spacing: 0.35em;
 }
 
 .setup-step-1 .setup-submit {
@@ -3169,19 +3082,11 @@ h3,
   .jersey-preview {
     width: 178px;
     height: 190px;
-    padding-top: 37px;
+    padding-top: 45px;
   }
 
   .jersey-preview strong {
     font-size: 66px;
-  }
-
-  .jersey-preview i {
-    margin-bottom: 4px;
-  }
-
-  .jersey-preview small {
-    font-size: 5px;
   }
 
   .build-step {
@@ -3252,7 +3157,7 @@ h3,
 
 @media (max-width: 390px) {
   .identity-fields {
-    grid-template-columns: minmax(0, 1fr) 82px;
+    grid-template-columns: minmax(0, 1fr) 112px;
   }
 
   .build-step .origin-grid button {
