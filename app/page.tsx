@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { TEAMS, type Team, type TeamPath } from "./teams";
 
 type Position = "PG" | "SG" | "SF" | "PF" | "C";
 type Stage = "intro" | "setup" | "career" | "retired";
 type Origin = "europe" | "usa" | null;
-type TeamPath = "europe" | "college" | "nba";
-type CareerRole = "Featured starter" | "Starter" | "Rotation";
+type CareerRole =
+  | "Star Player"
+  | "Starter"
+  | "6th Man"
+  | "Bench Player"
+  | "Fringe Player";
 type MobileTab = "season" | "career" | "player";
 type AttributeKey =
   | "scoring"
@@ -16,19 +21,6 @@ type AttributeKey =
   | "athleticism";
 
 type PlayerAttributes = Record<AttributeKey, number>;
-
-type Team = {
-  name: string;
-  short: string;
-  league: string;
-  logo: string;
-  color: string;
-  accent: string;
-  prestige: number;
-  path: TeamPath;
-  logoScale?: number;
-  logoY?: number;
-};
 
 type TeamOffer = {
   teamName: string;
@@ -43,10 +35,17 @@ type SeasonFeedback = {
   result: string;
   ovrBefore: number;
   ovrAfter: number;
-  healthBefore: number;
-  healthAfter: number;
   attributesBefore: PlayerAttributes;
   attributesAfter: PlayerAttributes;
+};
+
+type DraftSummary = {
+  team: Team;
+  pick: number;
+  round: 1 | 2;
+  role: CareerRole;
+  salary: number;
+  projection: string;
 };
 
 type Season = {
@@ -67,7 +66,6 @@ type GameState = {
   name: string;
   jerseyNumber: string;
   position: Position;
-  archetype: string;
   origin: Origin;
   phase: TeamPath;
   age: number;
@@ -81,7 +79,6 @@ type GameState = {
   contractYears: number;
   salary: number;
   cash: number;
-  health: number;
   morale: number;
   coach: number;
   teammates: number;
@@ -93,209 +90,19 @@ type GameState = {
   teamsPlayed: string[];
   lastEvent: string;
   lastDelta: number;
-  selectedChoice: string | null;
   offseason: boolean;
   offers: TeamOffer[];
   draftEligible: boolean;
   draftProjection: string;
 };
 
-type Choice = {
-  id: string;
-  eyebrow: string;
-  title: string;
-  body: string;
-  upside: string;
-  risk: string;
-  effect: "train" | "team" | "brand" | "health" | "lead";
-};
-
 type Achievement = { id: string; title: string; body: string; points: number };
-
-const TEAMS: Team[] = [
-  {
-    name: "Paris Basketball",
-    short: "PAR",
-    league: "LNB Pro A",
-    logo: "teams/paris.png",
-    color: "#ff5d2e",
-    accent: "#161b33",
-    prestige: 68,
-    path: "europe",
-  },
-  {
-    name: "Maccabi Tel Aviv",
-    short: "MTA",
-    league: "Israeli Premier League",
-    logo: "teams/maccabi-tel-aviv.png",
-    color: "#f5c928",
-    accent: "#194f9e",
-    prestige: 74,
-    path: "europe",
-    logoScale: 1.02,
-  },
-  {
-    name: "FC Barcelona",
-    short: "FCB",
-    league: "Liga ACB",
-    logo: "teams/barcelona.png",
-    color: "#9b1634",
-    accent: "#1659c9",
-    prestige: 88,
-    path: "europe",
-    logoScale: 0.9,
-    logoY: 2,
-  },
-  {
-    name: "Real Madrid",
-    short: "RMA",
-    league: "Liga ACB",
-    logo: "teams/real-madrid.png",
-    color: "#f7f7f2",
-    accent: "#7256ff",
-    prestige: 92,
-    path: "europe",
-    logoScale: 0.88,
-    logoY: -1,
-  },
-  {
-    name: "UCLA Bruins",
-    short: "UCLA",
-    league: "NCAA",
-    logo: "teams/ucla.png",
-    color: "#2d68c4",
-    accent: "#f3c43d",
-    prestige: 76,
-    path: "college",
-  },
-  {
-    name: "Kentucky Wildcats",
-    short: "UK",
-    league: "NCAA",
-    logo: "teams/kentucky.png",
-    color: "#0033a0",
-    accent: "#ffffff",
-    prestige: 80,
-    path: "college",
-  },
-  {
-    name: "Duke Blue Devils",
-    short: "DUKE",
-    league: "NCAA",
-    logo: "teams/duke.png",
-    color: "#003087",
-    accent: "#ffffff",
-    prestige: 85,
-    path: "college",
-  },
-  {
-    name: "UConn Huskies",
-    short: "CONN",
-    league: "NCAA",
-    logo: "teams/uconn.png",
-    color: "#000e2f",
-    accent: "#ffffff",
-    prestige: 86,
-    path: "college",
-  },
-  {
-    name: "Charlotte Hornets",
-    short: "CHA",
-    league: "NBA",
-    logo: "teams/charlotte-hornets.png",
-    color: "#00788c",
-    accent: "#1d1160",
-    prestige: 64,
-    path: "nba",
-  },
-  {
-    name: "Detroit Pistons",
-    short: "DET",
-    league: "NBA",
-    logo: "teams/detroit-pistons.png",
-    color: "#c8102e",
-    accent: "#1d42ba",
-    prestige: 68,
-    path: "nba",
-  },
-  {
-    name: "Orlando Magic",
-    short: "ORL",
-    league: "NBA",
-    logo: "teams/orlando-magic.png",
-    color: "#0077c0",
-    accent: "#c4ced4",
-    prestige: 72,
-    path: "nba",
-  },
-  {
-    name: "Chicago Bulls",
-    short: "CHI",
-    league: "NBA",
-    logo: "teams/chicago-bulls.png",
-    color: "#ce1141",
-    accent: "#f4f4ef",
-    prestige: 76,
-    path: "nba",
-  },
-  {
-    name: "New York Knicks",
-    short: "NYK",
-    league: "NBA",
-    logo: "teams/new-york-knicks.png",
-    color: "#f58426",
-    accent: "#006bb6",
-    prestige: 82,
-    path: "nba",
-  },
-  {
-    name: "Miami Heat",
-    short: "MIA",
-    league: "NBA",
-    logo: "teams/miami-heat.png",
-    color: "#98002e",
-    accent: "#f9a01b",
-    prestige: 87,
-    path: "nba",
-  },
-  {
-    name: "Golden State Warriors",
-    short: "GSW",
-    league: "NBA",
-    logo: "teams/golden-state-warriors.png",
-    color: "#1d428a",
-    accent: "#ffc72c",
-    prestige: 90,
-    path: "nba",
-  },
-  {
-    name: "Los Angeles Lakers",
-    short: "LAL",
-    league: "NBA",
-    logo: "teams/la-lakers.png",
-    color: "#fdb927",
-    accent: "#552583",
-    prestige: 93,
-    path: "nba",
-  },
-  {
-    name: "Boston Celtics",
-    short: "BOS",
-    league: "NBA",
-    logo: "teams/boston-celtics.png",
-    color: "#007a33",
-    accent: "#ba9653",
-    prestige: 95,
-    path: "nba",
-  },
-];
 
 const DEFAULT: GameState = {
   stage: "intro",
   name: "",
   jerseyNumber: "1",
   position: "PG",
-  archetype: "Floor General",
   origin: null,
   phase: "europe",
   age: 16,
@@ -311,11 +118,10 @@ const DEFAULT: GameState = {
     athleticism: 54,
   },
   team: TEAMS[0],
-  role: "Rotation",
+  role: "Fringe Player",
   contractYears: 1,
   salary: 0.08,
   cash: 0.01,
-  health: 92,
   morale: 78,
   coach: 55,
   teammates: 60,
@@ -327,92 +133,71 @@ const DEFAULT: GameState = {
   teamsPlayed: [],
   lastEvent: "Your first competitive season is waiting.",
   lastDelta: 0,
-  selectedChoice: null,
   offseason: false,
   offers: [],
   draftEligible: false,
   draftProjection: "Not on draft boards",
 };
 
-const ARCHETYPES: Record<Position, string[]> = {
-  PG: ["Floor General", "Shot Creator", "Two-Way Guard"],
-  SG: ["Three-Level Scorer", "Sharpshooter", "Perimeter Lock"],
-  SF: ["Two-Way Wing", "Slasher", "Point Forward"],
-  PF: ["Stretch Four", "Interior Force", "Switch Defender"],
-  C: ["Rim Protector", "Post Maestro", "Modern Big"],
-};
-
 const EVENTS = [
   {
     text: "A veteran stayed late to work on your footwork.",
     delta: 1,
-    health: 0,
     morale: 4,
   },
   {
     text: "A fourth-quarter run finally put scouts on notice.",
     delta: 1,
-    health: -2,
     morale: 5,
   },
   {
     text: "A minor ankle sprain cost you three weeks.",
     delta: -2,
-    health: -18,
     morale: -3,
   },
   {
     text: "Your shooting coach rebuilt your release.",
     delta: 1,
-    health: 0,
     morale: 2,
   },
   {
     text: "A locker-room argument damaged team chemistry.",
     delta: -1,
-    health: 0,
     morale: -8,
   },
   {
     text: "Heavy minutes exposed gaps in your game.",
     delta: -2,
-    health: -10,
     morale: -4,
   },
   {
     text: "A national-team camp raised your confidence.",
     delta: 1,
-    health: -4,
     morale: 6,
   },
   {
     text: "A mentor changed how you read pick-and-roll coverages.",
     delta: 1,
-    health: 0,
     morale: 4,
   },
   {
     text: "A wrist injury interrupted your best stretch.",
     delta: -3,
-    health: -24,
     morale: -6,
   },
   {
     text: "You struggled when opponents adjusted to your tendencies.",
     delta: -2,
-    health: -3,
     morale: -5,
   },
   {
     text: "A playoff breakthrough changed the way coaches see you.",
     delta: 1,
-    health: -7,
     morale: 7,
   },
   {
     text: "A quiet season left scouts divided about your ceiling.",
     delta: -1,
-    health: 0,
     morale: -2,
   },
 ];
@@ -491,9 +276,9 @@ const ACHIEVEMENTS: Achievement[] = [
     points: 75,
   },
   {
-    id: "ironman",
+    id: "veteran",
     title: "Built to Last",
-    body: "Play ten seasons and keep health above 75.",
+    body: "Complete ten seasons in one career.",
     points: 40,
   },
   {
@@ -554,7 +339,7 @@ const ATTRIBUTE_LABELS: Record<AttributeKey, string> = {
   athleticism: "ATHLETICISM",
 };
 
-const POSITION_WEIGHTS: Record<Position, PlayerAttributes> = {
+const POSITION_GROWTH_WEIGHTS: Record<Position, PlayerAttributes> = {
   PG: {
     scoring: 0.25,
     playmaking: 0.31,
@@ -584,127 +369,191 @@ const POSITION_WEIGHTS: Record<Position, PlayerAttributes> = {
     athleticism: 0.2,
   },
   C: {
-    scoring: 0.18,
-    playmaking: 0.08,
-    defense: 0.27,
-    rebounding: 0.29,
-    athleticism: 0.18,
+    scoring: 0.22,
+    playmaking: 0.05,
+    defense: 0.28,
+    rebounding: 0.31,
+    athleticism: 0.14,
   },
 };
 
-function calculateOvr(attributes: PlayerAttributes, position: Position) {
-  const weights = POSITION_WEIGHTS[position];
+const POSITION_START_MODIFIERS: Record<Position, PlayerAttributes> = {
+  PG: { scoring: 2, playmaking: 6, defense: 0, rebounding: -8, athleticism: 0 },
+  SG: { scoring: 5, playmaking: 0, defense: 1, rebounding: -6, athleticism: 0 },
+  SF: { scoring: 0, playmaking: -5, defense: 2, rebounding: 0, athleticism: 3 },
+  PF: { scoring: 0, playmaking: -6, defense: 3, rebounding: 3, athleticism: 0 },
+  C: { scoring: 0, playmaking: -12, defense: 6, rebounding: 6, athleticism: 0 },
+};
+
+const ROLE_GROWTH_MULTIPLIER: Record<CareerRole, number> = {
+  "Star Player": 1.2,
+  Starter: 1.1,
+  "6th Man": 1,
+  "Bench Player": 0.85,
+  "Fringe Player": 0.65,
+};
+
+const ROLE_ORDER: CareerRole[] = [
+  "Star Player",
+  "Starter",
+  "6th Man",
+  "Bench Player",
+  "Fringe Player",
+];
+
+function calculateOvr(attributes: PlayerAttributes) {
   return Math.round(
-    ATTRIBUTE_KEYS.reduce(
-      (total, key) => total + attributes[key] * weights[key],
-      0,
-    ),
+    ATTRIBUTE_KEYS.reduce((total, key) => total + attributes[key], 0) / 5,
   );
 }
 
+function seededUnit(seed: number) {
+  return Math.abs(Math.sin(seed * 12.9898 + 78.233)) % 1;
+}
+
+function weightedAttribute(weights: PlayerAttributes, seed: number) {
+  let cursor = seededUnit(seed) * ATTRIBUTE_KEYS.reduce((sum, key) => sum + weights[key], 0);
+  for (const key of ATTRIBUTE_KEYS) {
+    cursor -= weights[key];
+    if (cursor <= 0) return key;
+  }
+  return ATTRIBUTE_KEYS[ATTRIBUTE_KEYS.length - 1];
+}
+
 function attributesForProspect(
-  overall: number,
+  baseRating: number,
   position: Position,
-  archetype: string,
   seed: number,
 ): PlayerAttributes {
-  const profile: PlayerAttributes = {
-    scoring: overall,
-    playmaking: overall,
-    defense: overall,
-    rebounding: overall,
-    athleticism: overall,
-  };
-  const positionShape: Record<Position, Partial<PlayerAttributes>> = {
-    PG: { playmaking: 6, rebounding: -7, scoring: 2 },
-    SG: { scoring: 6, rebounding: -5, playmaking: 1 },
-    SF: { scoring: 2, defense: 2, athleticism: 3, playmaking: -3 },
-    PF: { rebounding: 5, defense: 3, playmaking: -6 },
-    C: { rebounding: 7, defense: 6, playmaking: -8, scoring: -2 },
-  };
+  const profile = {} as PlayerAttributes;
   ATTRIBUTE_KEYS.forEach((key, index) => {
-    const variation = Math.floor(Math.abs(Math.sin(seed + index * 29)) * 7) - 3;
-    profile[key] += (positionShape[position][key] ?? 0) + variation;
-  });
-  const lowerArchetype = archetype.toLowerCase();
-  if (/scorer|shooter|slasher|offensive|post/.test(lowerArchetype))
-    profile.scoring += 4;
-  if (/general|creator|point|maestro/.test(lowerArchetype))
-    profile.playmaking += 4;
-  if (/defender|lock|protector|two-way/.test(lowerArchetype))
-    profile.defense += 4;
-  if (/big|force|four|center/.test(lowerArchetype)) profile.rebounding += 3;
-
-  const correction = overall - calculateOvr(profile, position);
-  ATTRIBUTE_KEYS.forEach((key) => {
-    profile[key] = clamp(profile[key] + correction, 35, 96);
+    const variation = Math.floor(seededUnit(seed + index * 29) * 7) - 3;
+    profile[key] = clamp(
+      baseRating + POSITION_START_MODIFIERS[position][key] + variation,
+      0,
+      99,
+    );
   });
   return profile;
 }
 
+function ageGrowthMultiplier(age: number) {
+  const multipliers: Record<number, number> = {
+    16: 3,
+    17: 2.5,
+    18: 2.2,
+    19: 2,
+    20: 1.8,
+    21: 1.6,
+    22: 1.4,
+    23: 1.2,
+    24: 1,
+    25: 0.9,
+    26: 0.8,
+    27: 0.7,
+    28: 0.6,
+    29: 0.5,
+    30: 0.4,
+    31: 0.25,
+    32: 0.1,
+    33: 0,
+    34: -0.25,
+    35: -0.5,
+    36: -0.75,
+    37: -1,
+  };
+  if (age <= 16) return 3;
+  if (age >= 38) return -1.25;
+  return multipliers[age] ?? 0;
+}
+
+function demoteRole(role: CareerRole) {
+  return ROLE_ORDER[Math.min(ROLE_ORDER.length - 1, ROLE_ORDER.indexOf(role) + 1)];
+}
+
+function roleForTeam(team: Team, ovr: number): CareerRole {
+  const rosterLevel = team.prestige - (team.path === "nba" ? 10 : 15);
+  const difference = ovr - rosterLevel;
+  if (difference >= 8) return "Star Player";
+  if (difference >= 3) return "Starter";
+  if (difference >= -2) return "6th Man";
+  if (difference >= -8) return "Bench Player";
+  return "Fringe Player";
+}
+
+function normalizeRole(role?: string): CareerRole {
+  if (role === "Featured starter") return "Star Player";
+  if (role === "Rotation") return "Bench Player";
+  return ROLE_ORDER.includes(role as CareerRole)
+    ? (role as CareerRole)
+    : "Fringe Player";
+}
+
 function developAttributes(
   game: GameState,
-  choice: Choice,
-  baseline: number,
+  startingAttributes: PlayerAttributes,
+  role: CareerRole,
   seed: number,
+  eventDelta: number,
 ) {
-  const next = { ...game.attributes };
-  ATTRIBUTE_KEYS.forEach((key) => {
-    next[key] = clamp(next[key] + baseline, 35, 99);
-  });
+  const next = { ...startingAttributes };
+  const startingOvr = calculateOvr(next);
+  const multiplier = ageGrowthMultiplier(game.age);
+  const roll = 1 + seededUnit(seed + 17) * 2;
+  const potentialGap = Math.max(0, game.potential - startingOvr);
+  let target = eventDelta;
 
-  const add = (key: AttributeKey, value: number) => {
-    next[key] = clamp(next[key] + value, 35, 99);
-  };
-  if (choice.effect === "train") {
-    const primary =
-      game.position === "PG"
-        ? "playmaking"
-        : game.position === "SG"
-          ? "scoring"
-          : game.position === "C"
-            ? "defense"
-            : "athleticism";
-    add(primary, 2);
-    add(seededPick(ATTRIBUTE_KEYS, seed + 53), 1);
-  } else if (choice.effect === "team") {
-    add("playmaking", 2);
-    add("defense", 1);
-    add("scoring", -1);
-  } else if (choice.effect === "brand") {
-    add("athleticism", -1);
-  } else if (choice.effect === "health") {
-    add("athleticism", 2);
-  } else if (choice.effect === "lead") {
-    add("scoring", 3);
-    add("playmaking", 1);
-    add("defense", -1);
+  if (multiplier > 0 && potentialGap > 0) {
+    const growth = Math.round(
+      roll *
+        multiplier *
+        (potentialGap / 30) *
+        ROLE_GROWTH_MULTIPLIER[role] *
+        game.team.trainingMultiplier,
+    );
+    target += Math.min(potentialGap, Math.max(0, growth));
+  } else if (multiplier < 0) {
+    target -= Math.round(Math.abs(multiplier) * roll);
   }
-  if (game.age >= 31) add("athleticism", -1);
 
-  const ceiling = Math.min(
-    game.potential,
-    choice.effect === "health" ? game.ovr + 1 : 99,
-  );
+  const targetOvr = clamp(startingOvr + target, 0, 99);
+  const declineWeights: PlayerAttributes = {
+    scoring: 1,
+    playmaking: 1,
+    defense: 1,
+    rebounding: 1,
+    athleticism: 2,
+  };
   let guard = 0;
-  while (calculateOvr(next, game.position) > ceiling && guard < 80) {
-    const key = [...ATTRIBUTE_KEYS].sort(
-      (a, b) =>
-        next[b] * POSITION_WEIGHTS[game.position][b] -
-        next[a] * POSITION_WEIGHTS[game.position][a],
-    )[guard % ATTRIBUTE_KEYS.length];
-    next[key] = Math.max(35, next[key] - 1);
+  while (calculateOvr(next) !== targetOvr && guard < 1200) {
+    const rising = calculateOvr(next) < targetOvr;
+    const key = weightedAttribute(
+      rising ? POSITION_GROWTH_WEIGHTS[game.position] : declineWeights,
+      seed + guard * 31,
+    );
+    next[key] = clamp(next[key] + (rising ? 1 : -1), 0, 99);
     guard += 1;
+    if (rising && ATTRIBUTE_KEYS.every((item) => next[item] === 99)) break;
+    if (!rising && ATTRIBUTE_KEYS.every((item) => next[item] === 0)) break;
   }
   return next;
 }
 
 function expectedMinutes(role: CareerRole) {
-  return role === "Featured starter" ? 33 : role === "Starter" ? 26 : 16;
+  return {
+    "Star Player": 34,
+    Starter: 28,
+    "6th Man": 22,
+    "Bench Player": 12,
+    "Fringe Player": 5,
+  }[role];
 }
 
-function developmentLabel(role: CareerRole, prestige: number) {
-  const score = expectedMinutes(role) + (96 - prestige) * 0.15;
+function developmentLabel(role: CareerRole, team: Team) {
+  const score =
+    expectedMinutes(role) +
+    (96 - team.prestige) * 0.15 +
+    (team.trainingMultiplier - 1) * 30;
   return score >= 34 ? "ELITE" : score >= 28 ? "STRONG" : "LIMITED";
 }
 
@@ -773,7 +622,7 @@ async function createCareerCard(game: GameState) {
   context.fillStyle = "#35dcff";
   context.font = "800 25px 'Barlow Condensed', 'Arial Narrow', sans-serif";
   context.fillText(
-    `#${game.jerseyNumber} · ${game.position} · ${game.archetype.toUpperCase()}`,
+    `#${game.jerseyNumber} · ${game.position} · ${game.role.toUpperCase()}`,
     72,
     260,
   );
@@ -862,7 +711,7 @@ function offersFor(
     return [
       {
         teamName: pro.name,
-        role: "Featured starter",
+        role: roleForTeam(pro, ovr),
         direction: "pro",
         contractYears: 3,
       },
@@ -887,7 +736,7 @@ function offersFor(
     const team = seededPick(stepUps, seed + 7);
     offers.push({
       teamName: team.name,
-      role: ovr >= team.prestige - 9 ? "Starter" : "Rotation",
+      role: roleForTeam(team, ovr),
       direction: "step-up",
       contractYears: 3,
     });
@@ -896,7 +745,7 @@ function offersFor(
     const team = seededPick(playtimeMoves, seed + 31);
     offers.push({
       teamName: team.name,
-      role: "Featured starter",
+      role: roleForTeam(team, ovr),
       direction: "playtime",
       contractYears: 2,
     });
@@ -932,7 +781,7 @@ function achievementIdsFor(game: GameState) {
   if (game.rings >= 1) ids.push("champion");
   if (game.awards.includes("League MVP")) ids.push("mvp");
   if (game.rings >= 3) ids.push("dynasty");
-  if (game.history.length >= 10 && game.health >= 75) ids.push("ironman");
+  if (game.history.length >= 10) ids.push("veteran");
   if (game.ovr >= 92 || game.legacy >= 1000) ids.push("legend");
   return ids;
 }
@@ -966,9 +815,11 @@ export default function Home() {
   const [seasonFeedback, setSeasonFeedback] = useState<SeasonFeedback | null>(
     null,
   );
+  const [draftSummary, setDraftSummary] = useState<DraftSummary | null>(null);
   const [shareStatus, setShareStatus] = useState("");
   const [mobileTab, setMobileTab] = useState<MobileTab>("season");
   const [setupStep, setSetupStep] = useState<1 | 2>(1);
+  const [midgameDecision, setMidgameDecision] = useState(false);
 
   useEffect(() => {
     try {
@@ -988,16 +839,12 @@ export default function Home() {
           TEAMS.find((entry) => entry.name === parsed.team?.name) ??
           DEFAULT.team;
         const startingOvr = parsed.startingOvr ?? parsed.ovr ?? DEFAULT.ovr;
-        const potential = clamp(
-          parsed.potential ?? startingOvr + 18,
-          Math.min(93, startingOvr + 10),
-          93,
-        );
+        const potential = clamp(parsed.potential ?? startingOvr + 35, 0, 99);
         const offers = (
           parsed.offers ??
           (parsed.offerNames ?? []).map((teamName) => ({
             teamName,
-            role: "Rotation" as CareerRole,
+            role: "Bench Player" as CareerRole,
             direction: "step-up" as const,
             contractYears: 3,
           }))
@@ -1008,9 +855,8 @@ export default function Home() {
         const attributes =
           parsed.attributes ??
           attributesForProspect(
-            clamp(parsed.ovr ?? startingOvr, 38, potential),
+            clamp(parsed.ovr ?? startingOvr, 0, 99),
             parsed.position ?? DEFAULT.position,
-            parsed.archetype ?? DEFAULT.archetype,
             (parsed.year ?? DEFAULT.year) + (parsed.age ?? DEFAULT.age),
           );
         setGame({
@@ -1023,12 +869,9 @@ export default function Home() {
           startingOvr,
           potential,
           attributes,
-          ovr: Math.min(
-            calculateOvr(attributes, parsed.position ?? DEFAULT.position),
-            potential,
-          ),
+          ovr: calculateOvr(attributes),
           team,
-          role: parsed.role ?? "Rotation",
+          role: normalizeRole(parsed.role),
           teamsPlayed: parsed.teamsPlayed ?? [team.name],
           offers,
           offseason: parsed.offseason ?? false,
@@ -1072,74 +915,6 @@ export default function Home() {
     achievementIds.includes(item.id),
   ).reduce((sum, item) => sum + item.points, 0);
 
-  const choices = useMemo<Choice[]>(() => {
-    const core: Choice[] = [
-      {
-        id: "work",
-        eyebrow: "DEVELOPMENT",
-        title: "Live in the gym",
-        body: "Chase improvement with an unforgiving training load.",
-        upside: "+1 development · Coach trust",
-        risk: "-12 health · Injury risk",
-        effect: "train",
-      },
-      {
-        id: "chemistry",
-        eyebrow: "LOCKER ROOM",
-        title: "Build the brotherhood",
-        body: "Sacrifice touches and become the teammate everyone trusts.",
-        upside: "Best title odds · Morale",
-        risk: "No growth bonus",
-        effect: "team",
-      },
-      {
-        id: "brand",
-        eyebrow: "OFF COURT",
-        title: "Grow the brand",
-        body: "Turn attention into endorsements and a bigger platform.",
-        upside: "Money · Fans",
-        risk: "-1 development · Coach trust",
-        effect: "brand",
-      },
-      {
-        id: "recover",
-        eyebrow: "BODY",
-        title: "Protect the future",
-        body: "A protected season: no major injury and a serious recovery plan.",
-        upside: "Guaranteed safety · +24 health",
-        risk: "Growth capped at +1",
-        effect: "health",
-      },
-      {
-        id: "lead",
-        eyebrow: "LEGACY",
-        title: "Demand the spotlight",
-        body: "Take the biggest shots and accept the pressure that follows.",
-        upside: "Stats · Award chance",
-        risk: "-1 development · Chemistry",
-        effect: "lead",
-      },
-    ];
-    if (game.health < 68) {
-      const health = core.find((choice) => choice.effect === "health")!;
-      return [
-        health,
-        seededPick(
-          core.filter((choice) => choice.effect !== "health"),
-          game.year * 3 + game.age,
-        ),
-      ];
-    }
-    const first = seededPick(core, game.year + game.ovr);
-    return [
-      first,
-      seededPick(
-        core.filter((choice) => choice.id !== first.id),
-        game.year * 3 + game.age,
-      ),
-    ];
-  }, [game.year, game.ovr, game.age, game.health]);
-
   const offers = game.offers
     .map((offer) => ({
       offer,
@@ -1150,13 +925,11 @@ export default function Home() {
     );
 
   function beginCareer() {
-    const startingOvr = randomInt(43, 58);
-    const eliteUpside = Math.random() < 0.08 ? randomInt(6, 10) : 0;
-    const potential = clamp(
-      startingOvr + randomInt(12, 25) + eliteUpside,
-      58,
-      93,
-    );
+    const baseRating = randomInt(40, 54);
+    const seed = randomInt(1, 10000);
+    const attributes = attributesForProspect(baseRating, DEFAULT.position, seed);
+    const startingOvr = calculateOvr(attributes);
+    const potential = clamp(startingOvr + randomInt(30, 45), 0, 99);
     let remembered: { name?: string; jerseyNumber?: string } = {};
     try {
       remembered = JSON.parse(
@@ -1169,18 +942,13 @@ export default function Home() {
       stage: "setup",
       name: remembered.name ?? "",
       jerseyNumber: remembered.jerseyNumber ?? "1",
-      startingOvr,
+      startingOvr: baseRating,
       ovr: startingOvr,
       potential,
-      attributes: attributesForProspect(
-        startingOvr,
-        DEFAULT.position,
-        DEFAULT.archetype,
-        randomInt(1, 10000),
-      ),
-      health: randomInt(82, 97),
+      attributes,
       morale: randomInt(66, 88),
     });
+    setMidgameDecision(false);
   }
 
   function confirmPlayer() {
@@ -1192,8 +960,14 @@ export default function Home() {
       return;
     const pool =
       game.origin === "usa"
-        ? TEAMS.filter((team) => team.path === "college")
-        : TEAMS.filter((team) => team.path === "europe" && team.prestige <= 74);
+        ? TEAMS.filter(
+            (team) =>
+              team.path === "college" &&
+              team.prestige <= game.startingOvr + 36,
+          )
+        : TEAMS.filter(
+            (team) => team.path === "europe" && team.prestige <= 74,
+          );
     const team = pool[randomInt(0, pool.length - 1)];
     localStorage.setItem(
       "full-court-legacy-profile",
@@ -1205,123 +979,125 @@ export default function Home() {
     const attributes = attributesForProspect(
       game.startingOvr,
       game.position,
-      game.archetype,
       game.year + game.name.length * 37 + Number(game.jerseyNumber),
     );
+    const startingOvr = calculateOvr(attributes);
+    const potential = clamp(startingOvr + randomInt(30, 45), 0, 99);
     setGame((current) => ({
       ...current,
       stage: "career",
       phase: team.path,
       team,
       attributes,
-      ovr: calculateOvr(attributes, current.position),
-      role: "Rotation",
-      salary: salaryFor(team, current.ovr),
+      startingOvr,
+      ovr: startingOvr,
+      potential,
+      role: roleForTeam(team, startingOvr),
+      salary: salaryFor(team, startingOvr),
       contractYears: team.path === "college" ? 1 : 2,
       teamsPlayed: [team.name],
       lastEvent: `${current.name}'s journey begins with ${team.name}. Nothing is guaranteed.`,
     }));
   }
 
-  function playSeason(choice: Choice) {
-    const seed =
-      game.year * 13 +
-      game.ovr * 7 +
-      choice.id.length +
-      game.history.length * 17;
-    const eventPool =
-      choice.effect === "health"
-        ? EVENTS.filter((item) => item.health >= 0)
-        : EVENTS;
-    const event = seededPick(eventPool, seed);
-    const growthCurve =
-      game.age < 22 ? 1 : game.age < 27 ? 0 : game.age < 31 ? -1 : -2;
-    const variance = Math.floor(Math.abs(Math.sin(seed)) * 4) - 2;
-    const effectDelta: Record<Choice["effect"], number> = {
-      train: 1,
-      team: 0,
-      brand: -1,
-      health: 0,
-      lead: -1,
-    };
-    const roleDelta: Record<CareerRole, number> = {
-      "Featured starter": 1,
-      Starter: 0,
-      Rotation: -1,
-    };
-    const ceilingPressure =
-      game.ovr >= game.potential ? -2 : game.ovr >= game.potential - 3 ? -1 : 0;
-    const healthPressure = game.health < 45 ? -2 : game.health < 65 ? -1 : 0;
-    let projectedDelta = clamp(
-      growthCurve +
-        variance +
-        effectDelta[choice.effect] +
-        roleDelta[game.role] +
-        event.delta +
-        ceilingPressure +
-        healthPressure,
-      -4,
-      3,
-    );
-    if (choice.effect === "health")
-      projectedDelta = clamp(projectedDelta, -1, 1);
+  function startSeason() {
+    if (randomInt(1, 100) <= 40) {
+      setMidgameDecision(true);
+      setGame((current) => ({
+        ...current,
+        lastEvent: "Down one. Final possession. The ball is in your hands.",
+        lastDelta: 0,
+      }));
+      return;
+    }
+    completeSeason();
+  }
+
+  function resolveMidgameDecision(action: "shot" | "coach") {
+    const attributes = { ...game.attributes };
+    let role = game.role;
+    let midgameEvent = "You ran the coach's play. The season moved on without changing your ratings or role.";
+
+    if (action === "shot") {
+      const makeChance = clamp(attributes.scoring, 30, 70);
+      const made = randomInt(1, 100) <= makeChance;
+      if (made) {
+        attributes.scoring = clamp(attributes.scoring + 5, 0, 99);
+        midgameEvent = `You called your own number and hit the game-winner. Scoring +5.`;
+      } else {
+        attributes.scoring = clamp(attributes.scoring - 2, 0, 99);
+        const previousRole = role;
+        role = demoteRole(role);
+        midgameEvent = `The shot missed. Scoring -2${role === previousRole ? "." : ` and your role fell to ${role}.`}`;
+      }
+    }
+
+    setMidgameDecision(false);
+    completeSeason({ attributes, role, midgameEvent });
+  }
+
+  function completeSeason(midgame?: {
+    attributes: PlayerAttributes;
+    role: CareerRole;
+    midgameEvent: string;
+  }) {
+    const seed = game.year * 13 + game.ovr * 7 + game.history.length * 17;
+    const event = seededPick(EVENTS, seed);
+    const startingAttributes = midgame?.attributes ?? game.attributes;
+    const role = midgame?.role ?? game.role;
     const nextAttributes = developAttributes(
       game,
-      choice,
-      projectedDelta,
+      startingAttributes,
+      role,
       seed,
+      event.delta,
     );
-    const nextOvr = calculateOvr(nextAttributes, game.position);
+    const nextOvr = calculateOvr(nextAttributes);
     const delta = nextOvr - game.ovr;
     const isNBA = game.team.path === "nba";
     const isCollege = game.team.path === "college";
-    const roleGames =
-      game.role === "Featured starter" ? 5 : game.role === "Rotation" ? -5 : 0;
+    const roleGames: Record<CareerRole, number> = {
+      "Star Player": 6,
+      Starter: 3,
+      "6th Man": 0,
+      "Bench Player": -8,
+      "Fringe Player": -14,
+    };
     const games = Math.max(
-      18,
+      8,
       (isNBA
         ? 56 + (seed % 27)
         : isCollege
           ? 25 + (seed % 12)
-          : 24 + (seed % 14)) + roleGames,
+          : 24 + (seed % 14)) + roleGames[role],
     );
-    const scoringShare = clamp((nextAttributes.scoring - 35) / 64, 0.08, 1);
-    const playmakingShare = clamp(
-      (nextAttributes.playmaking - 35) / 64,
-      0.08,
-      1,
-    );
-    const reboundingShare = clamp(
-      (nextAttributes.rebounding - 35) / 64,
-      0.08,
-      1,
-    );
-    const roleScoring =
-      game.role === "Featured starter" ? 3 : game.role === "Rotation" ? -2 : 0;
+    const scoringShare = clamp(nextAttributes.scoring / 99, 0.03, 1);
+    const playmakingShare = clamp(nextAttributes.playmaking / 99, 0.03, 1);
+    const reboundingShare = clamp(nextAttributes.rebounding / 99, 0.03, 1);
+    const roleScoring: Record<CareerRole, number> = {
+      "Star Player": 4,
+      Starter: 2,
+      "6th Man": 0,
+      "Bench Player": -3,
+      "Fringe Player": -5,
+    };
     const points =
-      Math.round(
-        (3.5 +
-          scoringShare * 22 +
-          roleScoring +
-          (choice.effect === "lead" ? 2.5 : 0)) *
-          10,
-      ) / 10;
+      Math.round((3.5 + scoringShare * 22 + roleScoring[role]) * 10) / 10;
     const assists =
       Math.round(
         ((game.position === "PG" ? 2.2 : 0.8) +
           playmakingShare * 5.5 +
-          roleScoring * 0.18) *
+          roleScoring[role] * 0.18) *
           10,
       ) / 10;
     const rebounds =
       Math.round(
         ((game.position === "C" || game.position === "PF" ? 3.2 : 1.2) +
           reboundingShare * 6.2 +
-          roleScoring * 0.18) *
+          roleScoring[role] * 0.18) *
           10,
       ) / 10;
-    const chemistryBoost =
-      choice.effect === "team" ? 8 : (game.teammates - 50) / 5;
+    const chemistryBoost = (game.teammates - 50) / 5;
     const titleChance = Math.max(
       2,
       game.team.prestige + nextOvr + chemistryBoost - 166,
@@ -1359,6 +1135,9 @@ export default function Home() {
       newAwards.push("Rising Star");
     if (wonTitle && !newAwards.includes("Champion")) newAwards.push("Champion");
 
+    const eventText = midgame?.midgameEvent
+      ? `${midgame.midgameEvent} ${event.text}`
+      : event.text;
     const season: Season = {
       age: game.age,
       year: `${game.year}-${String(game.year + 1).slice(2)}`,
@@ -1369,54 +1148,27 @@ export default function Home() {
       assists,
       rebounds,
       result,
-      event: event.text,
+      event: eventText,
     };
     const nextAge = game.age + 1;
     const nextHistory = [season, ...game.history];
-    const nextHealth = clamp(
-      game.health +
-        event.health +
-        (choice.effect === "health"
-          ? 24
-          : choice.effect === "train"
-            ? -12
-            : -4),
-    );
     const nextOffers = offersFor(game, nextOvr, nextAge, seed);
     const draftEligible =
       game.team.path !== "nba" && nextAge >= 19 && nextOvr >= 60;
     const nextState: GameState = {
       ...game,
-      stage: nextAge >= 39 || nextOvr <= 39 ? "retired" : "career",
+      stage: nextAge >= 39 || nextOvr <= 0 ? "retired" : "career",
       age: nextAge,
       year: game.year + 1,
       ovr: nextOvr,
       attributes: nextAttributes,
-      cash:
-        game.cash +
-        game.salary * 0.52 +
-        (choice.effect === "brand" ? 0.15 + game.fans / 160 : 0),
+      role,
+      cash: game.cash + game.salary * 0.52,
       contractYears: Math.max(0, game.contractYears - 1),
-      health: nextHealth,
-      morale: clamp(
-        game.morale +
-          event.morale +
-          (wonTitle ? 12 : 0) +
-          (choice.effect === "team" ? 7 : 0),
-      ),
-      coach: clamp(
-        game.coach +
-          (choice.effect === "train" ? 5 : choice.effect === "brand" ? -7 : 1),
-      ),
-      teammates: clamp(
-        game.teammates +
-          (choice.effect === "team" ? 10 : choice.effect === "lead" ? -5 : 0),
-      ),
-      fans: clamp(
-        game.fans +
-          Math.max(1, Math.round(points / 6)) +
-          (choice.effect === "brand" ? 10 : 0),
-      ),
+      morale: clamp(game.morale + event.morale + (wonTitle ? 12 : 0)),
+      coach: clamp(game.coach + 1),
+      teammates: clamp(game.teammates),
+      fans: clamp(game.fans + Math.max(1, Math.round(points / 6))),
       legacy:
         game.legacy +
         Math.max(0, nextOvr - 62) +
@@ -1425,22 +1177,19 @@ export default function Home() {
       rings: game.rings + (wonTitle ? 1 : 0),
       awards: newAwards,
       history: nextHistory,
-      lastEvent: `${event.text} The offseason is here.`,
+      lastEvent: `${eventText} The offseason is here.`,
       lastDelta: delta,
-      selectedChoice: choice.id,
-      offseason: nextAge < 39 && nextOvr > 39,
+      offseason: nextAge < 39 && nextOvr > 0,
       offers: nextOffers,
       draftEligible,
       draftProjection: projectionFor(nextOvr),
     };
     setSeasonFeedback({
       season: season.year,
-      event: event.text,
+      event: eventText,
       result,
       ovrBefore: game.ovr,
       ovrAfter: nextOvr,
-      healthBefore: game.health,
-      healthAfter: nextHealth,
       attributesBefore: game.attributes,
       attributesAfter: nextAttributes,
     });
@@ -1460,7 +1209,7 @@ export default function Home() {
       ...current,
       team: destination,
       phase: nextPhase,
-      role: staying ? current.role : (offer?.role ?? "Rotation"),
+      role: staying ? current.role : (offer?.role ?? roleForTeam(destination, current.ovr)),
       salary: salaryFor(destination, current.ovr),
       contractYears: years,
       coach: staying ? clamp(current.coach + 4) : 48,
@@ -1472,11 +1221,11 @@ export default function Home() {
       offseason: false,
       offers: [],
       draftEligible: false,
-      selectedChoice: null,
       lastEvent: staying
         ? `You chose continuity with ${destination.name}.`
         : `${destination.name} earned your signature. Now prove the move was deserved.`,
     }));
+    setMidgameDecision(false);
   }
 
   function declareForDraft() {
@@ -1487,15 +1236,31 @@ export default function Home() {
       game.ovr >= 78
         ? nbaTeams
         : game.ovr >= 68
-          ? nbaTeams.slice(0, 4)
-          : nbaTeams.slice(0, 2);
+          ? nbaTeams.slice(0, 14)
+          : nbaTeams.slice(0, 8);
     const destination = seededPick(pool, game.year * 19 + game.ovr * 11);
+    const draftSeed = game.year * 23 + game.ovr * 17;
+    const pickRange =
+      game.ovr >= 82 ? [1, 14] : game.ovr >= 74 ? [15, 30] : [31, 60];
+    const pick =
+      pickRange[0] +
+      Math.floor(seededUnit(draftSeed) * (pickRange[1] - pickRange[0] + 1));
+    const role = roleForTeam(destination, game.ovr);
+    const salary = salaryFor(destination, game.ovr);
+    setDraftSummary({
+      team: destination,
+      pick,
+      round: pick <= 30 ? 1 : 2,
+      role,
+      salary,
+      projection: game.draftProjection,
+    });
     setGame((current) => ({
       ...current,
       team: destination,
       phase: "nba",
-      role: current.ovr >= 80 ? "Starter" : "Rotation",
-      salary: salaryFor(destination, current.ovr),
+      role,
+      salary,
       contractYears: 4,
       coach: 45,
       teammates: 42,
@@ -1508,14 +1273,16 @@ export default function Home() {
       offseason: false,
       offers: [],
       draftEligible: false,
-      selectedChoice: null,
       lastEvent: `Draft night: ${destination.name} called your name. The NBA starts now.`,
     }));
+    setMidgameDecision(false);
   }
 
   function resetGame() {
     localStorage.removeItem("full-court-legacy-save");
     setGame(DEFAULT);
+    setMidgameDecision(false);
+    setDraftSummary(null);
     setShowReset(false);
   }
 
@@ -1706,8 +1473,10 @@ export default function Home() {
                   <p>YOUR JERSEY</p>
                   <div className="jersey-stage" aria-label="Jersey preview">
                     <div className="jersey-preview">
+                      <i>FCL</i>
                       <span>{game.name.trim() || "YOUR NAME"}</span>
                       <strong>{game.jerseyNumber || "?"}</strong>
+                      <small>FULL COURT</small>
                     </div>
                   </div>
                 </aside>
@@ -1769,7 +1538,6 @@ export default function Home() {
                               setGame((current) => ({
                                 ...current,
                                 position,
-                                archetype: ARCHETYPES[position][0],
                               }))
                             }
                           >
@@ -1777,30 +1545,6 @@ export default function Home() {
                           </button>
                         ),
                       )}
-                    </div>
-                  </fieldset>
-                  <fieldset>
-                    <legend>ARCHETYPE</legend>
-                    <div className="archetype-list">
-                      {ARCHETYPES[game.position].map((archetype, index) => (
-                        <button
-                          key={archetype}
-                          aria-pressed={game.archetype === archetype}
-                          onClick={() =>
-                            setGame((current) => ({ ...current, archetype }))
-                          }
-                        >
-                          <span>{String(index + 1).padStart(2, "0")}</span>
-                          <strong>{archetype}</strong>
-                          <small>
-                            {index === 0
-                              ? "Balanced foundation"
-                              : index === 1
-                                ? "Offensive upside"
-                                : "Defense changes games"}
-                          </small>
-                        </button>
-                      ))}
                     </div>
                   </fieldset>
                 </div>
@@ -1865,7 +1609,7 @@ export default function Home() {
           <div className="career-card-player">
             <div>
               <p>
-                #{game.jerseyNumber} · {game.position} · {game.archetype}
+                #{game.jerseyNumber} · {game.position} · {game.role}
               </p>
               <h3>{game.name}</h3>
             </div>
@@ -1991,15 +1735,10 @@ export default function Home() {
             <div className="player-meta">
               <span>#{game.jerseyNumber}</span>
               <span>{game.position}</span>
-              <span>{game.archetype}</span>
+              <span>{game.role}</span>
               <span>AGE {game.age}</span>
             </div>
           </div>
-        </div>
-        <div className="hero-team">
-          <small>CURRENT TEAM</small>
-          <strong>{game.team.name}</strong>
-          <span>{game.team.league}</span>
         </div>
         <div className="ovr-block">
           <span>OVERALL</span>
@@ -2154,38 +1893,64 @@ export default function Home() {
                 )}
               </>
             ) : (
-              <>
-                <div className="section-title">
-                  <div>
-                    <p className="kicker">THE DECISION</p>
-                    <h2>What will define age {game.age}?</h2>
+              midgameDecision ? (
+                <>
+                  <div className="section-title">
+                    <div>
+                      <p className="kicker">FINAL POSSESSION</p>
+                      <h2>Down one. Who decides the game?</h2>
+                    </div>
+                    <span>{clamp(game.attributes.scoring, 30, 70)}% SHOT CHANCE</span>
                   </div>
-                  <span>CHOOSE ONE · THE YEAR WILL SIMULATE</span>
-                </div>
-                <div className="choice-grid">
-                  {choices.map((choice, index) => (
+                  <div className="choice-grid">
                     <button
-                      key={choice.id}
-                      className={`choice-card ${choice.effect === "health" ? "health-choice" : ""}`}
-                      onClick={() => playSeason(choice)}
+                      className="choice-card"
+                      onClick={() => resolveMidgameDecision("shot")}
                     >
-                      <span className="choice-index">0{index + 1}</span>
-                      <p>{choice.eyebrow}</p>
-                      <h3>{choice.title}</h3>
-                      <div>{choice.body}</div>
+                      <span className="choice-index">01</span>
+                      <p>BET ON YOURSELF</p>
+                      <h3>Take the shot</h3>
+                      <div>Your scoring rating decides the roll, clamped from 30% to 70%.</div>
                       <dl>
-                        <dt>UPSIDE</dt>
-                        <dd>{choice.upside}</dd>
-                        <dt>RISK</dt>
-                        <dd>{choice.risk}</dd>
+                        <dt>MAKE</dt>
+                        <dd>Win the game · +5 scoring</dd>
+                        <dt>MISS</dt>
+                        <dd>Lose · -2 scoring · Drop one role</dd>
                       </dl>
-                      <span className="choose-link">
-                        COMMIT TO THIS PATH <b>→</b>
-                      </span>
+                      <span className="choose-link">TAKE THE SHOT <b>→</b></span>
                     </button>
-                  ))}
-                </div>
-              </>
+                    <button
+                      className="choice-card"
+                      onClick={() => resolveMidgameDecision("coach")}
+                    >
+                      <span className="choice-index">02</span>
+                      <p>TRUST THE SYSTEM</p>
+                      <h3>Run the coach&apos;s play</h3>
+                      <div>Execute the call exactly as drawn up and let the possession play out.</div>
+                      <dl>
+                        <dt>RESULT</dt>
+                        <dd>No ratings or role change</dd>
+                        <dt>RISK</dt>
+                        <dd>None</dd>
+                      </dl>
+                      <span className="choose-link">RUN THE PLAY <b>→</b></span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="section-title">
+                    <div>
+                      <p className="kicker">NEXT SEASON</p>
+                      <h2>Age {game.age} is ready.</h2>
+                    </div>
+                    <span>40% CHANCE OF A MID-GAME DECISION</span>
+                  </div>
+                  <button className="primary-action season-start" onClick={startSeason}>
+                    PLAY SEASON <span>→</span>
+                  </button>
+                </>
+              )
             )}
 
             <section className="event-panel">
@@ -2353,9 +2118,8 @@ export default function Home() {
             </div>
           </section>
           <section className="side-panel">
-            <p className="kicker">BODY & MIND</p>
+            <p className="kicker">MINDSET</p>
             <div className="meter-list">
-              <Meter label="HEALTH" value={game.health} />
               <Meter label="MORALE" value={game.morale} />
             </div>
           </section>
@@ -2449,6 +2213,12 @@ export default function Home() {
           }}
         />
       )}
+      {draftSummary && (
+        <DraftSummaryModal
+          summary={draftSummary}
+          onClose={() => setDraftSummary(null)}
+        />
+      )}
       {achievementModal}
       {justUnlocked && (
         <button
@@ -2489,7 +2259,7 @@ function OfferMetrics({
       </div>
       <div>
         <dt>DEVELOPMENT</dt>
-        <dd>{developmentLabel(role, team.prestige)}</dd>
+        <dd>{developmentLabel(role, team)}</dd>
       </div>
       <div>
         <dt>TITLE OUTLOOK</dt>
@@ -2517,7 +2287,6 @@ function SeasonResultModal({
   onClose: () => void;
 }) {
   const ovrDelta = feedback.ovrAfter - feedback.ovrBefore;
-  const healthDelta = feedback.healthAfter - feedback.healthBefore;
   const attributeChanges = ATTRIBUTE_KEYS.map((key) => ({
     key,
     value: feedback.attributesAfter[key] - feedback.attributesBefore[key],
@@ -2545,16 +2314,6 @@ function SeasonResultModal({
               {ovrDelta} OVR
             </small>
           </div>
-          <div>
-            <span>HEALTH</span>
-            <strong>
-              {feedback.healthBefore} <i>→</i> {feedback.healthAfter}
-            </strong>
-            <small className={healthDelta >= 0 ? "positive" : "negative"}>
-              {healthDelta >= 0 ? "+" : ""}
-              {healthDelta}
-            </small>
-          </div>
         </div>
         <div className="result-attributes">
           {attributeChanges.length ? (
@@ -2578,6 +2337,74 @@ function SeasonResultModal({
             VIEW OFFSEASON <b>→</b>
           </button>
         </div>
+      </section>
+    </div>
+  );
+}
+
+function DraftSummaryModal({
+  summary,
+  onClose,
+}: {
+  summary: DraftSummary;
+  onClose: () => void;
+}) {
+  return (
+    <div className="modal-backdrop draft-summary-backdrop" role="presentation">
+      <section
+        className="draft-summary-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="draft-summary-title"
+      >
+        <div className="draft-summary-topline">
+          <img src="nba-logo.svg" alt="NBA" />
+          <span>DRAFT NIGHT · ROUND {summary.round}</span>
+        </div>
+        <div className="draft-pick-callout">
+          <span>PICK</span>
+          <strong>#{summary.pick}</strong>
+        </div>
+        <p className="kicker">THE CALL IS IN</p>
+        <h2 id="draft-summary-title">{summary.team.name}</h2>
+        <p className="draft-announcement">
+          selected you with the {summary.pick}
+          {summary.pick % 10 === 1 && summary.pick !== 11
+            ? "st"
+            : summary.pick % 10 === 2 && summary.pick !== 12
+              ? "nd"
+              : summary.pick % 10 === 3 && summary.pick !== 13
+                ? "rd"
+                : "th"} pick.
+        </p>
+        <div className="draft-team-lockup">
+          {teamMark(summary.team)}
+          <div>
+            <span>WELCOME TO THE NBA</span>
+            <strong>{summary.team.short}</strong>
+          </div>
+        </div>
+        <dl className="draft-summary-grid">
+          <div>
+            <dt>ROLE</dt>
+            <dd>{summary.role.toUpperCase()}</dd>
+          </div>
+          <div>
+            <dt>CONTRACT</dt>
+            <dd>4 YEARS</dd>
+          </div>
+          <div>
+            <dt>YEAR ONE</dt>
+            <dd>{formatMoney(summary.salary)}</dd>
+          </div>
+          <div>
+            <dt>PRE-DRAFT STOCK</dt>
+            <dd>{summary.projection.toUpperCase()}</dd>
+          </div>
+        </dl>
+        <button className="primary-action" onClick={onClose}>
+          BEGIN NBA CAREER <span>→</span>
+        </button>
       </section>
     </div>
   );
